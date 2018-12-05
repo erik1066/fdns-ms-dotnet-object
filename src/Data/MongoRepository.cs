@@ -77,6 +77,28 @@ namespace Foundation.ObjectService.Data
         }
 
         /// <summary>
+        /// Gets all objects in a collection
+        /// </summary>
+        /// <param name="databaseName">The database name</param>
+        /// <param name="collectionName">The collection name</param>
+        /// <returns>All objects in the collection</returns>
+        public async Task<string> GetAllAsync(string databaseName, string collectionName)
+        {
+            try
+            {
+                var database = GetDatabase(databaseName);
+                var collection = GetCollection(database, collectionName);
+                var documents = await collection.Find(_ => true).ToListAsync();
+                return StringifyDocuments(documents);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Get all failed on {databaseName}/{collectionName}");
+                throw ex;
+            }
+        }
+
+        /// <summary>
         /// Inserts a single object into the given database and collection
         /// </summary>
         /// <param name="databaseName">The database name</param>

@@ -270,7 +270,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             return Ok(findResults);
         }
 
-        // POST api/1.0/db/collection/search
+        // GET api/1.0/db/collection/search
         /// <summary>
         /// Searches for one or more objects that match the specified criteria
         /// </summary>
@@ -299,6 +299,29 @@ namespace Foundation.ObjectService.WebUI.Controllers
             }
             var findExpression = SearchStringConverter.BuildQuery(qs);
             var findResults = await _repository.FindAsync(routeParameters.DatabaseName, routeParameters.CollectionName, findExpression, queryParameters.Start, queryParameters.Limit, queryParameters.SortFieldName, System.ComponentModel.ListSortDirection.Ascending);
+            return Ok(findResults);
+        }
+
+        // GET api/1.0/db/collection
+        /// <summary>
+        /// Gets all objects in a collection
+        /// </summary>
+        /// <param name="routeParameters">Required route parameters needed for the find operation</param>
+        /// <returns>Array of objects in the specified collection</returns>
+        [Produces("application/json")]
+        [HttpGet("{db}/{collection}")]
+        [SwaggerResponse(200, "Returns all objects in the specified collection")]
+        [SwaggerResponse(400, "If the route parameters are invalid")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        public async Task<IActionResult> GetAllObjectsInCollection([FromRoute] DatabaseRouteParameters routeParameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var findResults = await _repository.GetAllAsync(routeParameters.DatabaseName, routeParameters.CollectionName);
             return Ok(findResults);
         }
 

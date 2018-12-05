@@ -19,6 +19,14 @@ namespace Foundation.ObjectService.Data
         Task<string> GetAsync(string databaseName, string collectionName, object id);
 
         /// <summary>
+        /// Gets all objects in a collection
+        /// </summary>
+        /// <param name="databaseName">The database name</param>
+        /// <param name="collectionName">The collection name</param>
+        /// <returns>All objects in the collection</returns>
+        Task<string> GetAllAsync(string databaseName, string collectionName);
+
+        /// <summary>
         /// Inserts a single object into the given database and collection
         /// </summary>
         /// <param name="databaseName">The database name</param>
