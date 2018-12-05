@@ -19,6 +19,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
     /// </summary>
     [Route("api/1.0")]
     [ApiController]
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public class ObjectController : ControllerBase
     {
         private readonly IObjectRepository _repository;
@@ -46,7 +47,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
         [SwaggerResponse(404, "If the object with this Id was not found")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> Get([FromRoute] ItemRouteParameters routeParameters)
+        public async Task<IActionResult> GetObject([FromRoute] ItemRouteParameters routeParameters)
         {
             if (!ModelState.IsValid)
             {
@@ -55,7 +56,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             var document = await _repository.GetAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id);
             if (document == null)
             {
-                return NotFound();
+                return ObjectNotFound(routeParameters.Id, routeParameters.CollectionName);
             }
             return Ok(document);
         }
@@ -89,7 +90,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(413, "If the Json payload is too large")]
         [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.INSERT_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> InsertWithId([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat)
+        public async Task<IActionResult> InsertObjectWithId([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat)
         {
             if (!ModelState.IsValid)
             {
@@ -100,7 +101,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 document = routeParameters.Id;
             }
-            return CreatedAtAction(nameof(Get), new { id = routeParameters.Id, db = routeParameters.DatabaseName, collection = routeParameters.CollectionName }, document);
+            return CreatedAtAction(nameof(GetObject), new { id = routeParameters.Id, db = routeParameters.DatabaseName, collection = routeParameters.CollectionName }, document);
         }
 
         // POST api/1.0/db/collection
@@ -132,7 +133,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(413, "If the Json payload is too large")]
         [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.INSERT_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> InsertWithNoId([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
+        public async Task<IActionResult> InsertObjectWithNoId([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
         {
             if (!ModelState.IsValid)
             {
@@ -144,7 +145,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 document = id;
             }
-            return CreatedAtAction(nameof(Get), new { id = id, db = routeParameters.DatabaseName, collection = routeParameters.CollectionName }, document);
+            return CreatedAtAction(nameof(GetObject), new { id = id, db = routeParameters.DatabaseName, collection = routeParameters.CollectionName }, document);
         }
 
         // PUT api/1.0/db/collection/5
@@ -177,7 +178,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(413, "If the Json payload is too large")]
         [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.UPDATE_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> Replace([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
+        public async Task<IActionResult> ReplaceObject([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
         {
             if (!ModelState.IsValid)
             {
@@ -186,7 +187,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             var document = await _repository.ReplaceAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
             if (string.IsNullOrEmpty(document))
             {
-                return NotFound();
+                return ObjectNotFound(routeParameters.Id, routeParameters.CollectionName);
             }
             if (responseFormat == ResponseFormat.OnlyId)
             {
@@ -209,7 +210,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
         [SwaggerResponse(404, "If the object to delete cannot be found")]
         [Authorize(Common.DELETE_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> Delete([FromRoute] ItemRouteParameters routeParameters)
+        public async Task<IActionResult> DeleteObject([FromRoute] ItemRouteParameters routeParameters)
         {
             if (!ModelState.IsValid)
             {
@@ -222,7 +223,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             }
             else
             {
-                return NotFound();
+                return ObjectNotFound(routeParameters.Id, routeParameters.CollectionName);
             }
         }
 
@@ -253,7 +254,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             }
             else
             {
-                return NotFound();
+                return CollectionNotFound(routeParameters.CollectionName);
             }
         }
 
@@ -289,7 +290,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(413, "If the find expression is too large")]
         [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> Find([FromBody] string findExpression, [FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters)
+        public async Task<IActionResult> FindObjects([FromBody] string findExpression, [FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters)
         {
             if (!ModelState.IsValid)
             {
@@ -320,7 +321,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
         [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> Search([FromQuery] string qs, [FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters)
+        public async Task<IActionResult> SearchObjects([FromQuery] string qs, [FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters)
         {
             if (!ModelState.IsValid)
             {
@@ -385,7 +386,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(413, "If the find expression is too large")]
         [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> Count([FromBody] string countExpression, [FromRoute] DatabaseRouteParameters routeParameters)
+        public async Task<IActionResult> CountObjects([FromBody] string countExpression, [FromRoute] DatabaseRouteParameters routeParameters)
         {
             if (!ModelState.IsValid)
             {
@@ -393,6 +394,28 @@ namespace Foundation.ObjectService.WebUI.Controllers
             }
             var countResults = await _repository.CountAsync(routeParameters.DatabaseName, routeParameters.CollectionName, countExpression);
             return Ok(countResults);
+        }
+
+        private IActionResult ObjectNotFound(string id, string collectionName)
+        {
+            return StatusCode(404, new ProblemDetails() 
+            {
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+                Title = "Not Found",
+                Status = 404,
+                Detail = $"Object '{id}' does not exist in collection '{collectionName}'" 
+            });
+        }
+
+        private IActionResult CollectionNotFound(string collectionName)
+        {
+            return StatusCode(404, new ProblemDetails() 
+            {
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+                Title = "Not Found",
+                Status = 404,
+                Detail = $"Collection '{collectionName}' does not exist" 
+            });
         }
     }
 }
