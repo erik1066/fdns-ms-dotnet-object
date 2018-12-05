@@ -150,6 +150,14 @@ namespace Foundation.ObjectService.WebUI
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers.Add("X-Frame-Options", "DENY");
+                context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+                context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+                await next();
+            });
+
             app.UseCors("CorsPolicy");
 
             if (env.IsDevelopment())
