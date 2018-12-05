@@ -1,21 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Swashbuckle.AspNetCore.Swagger;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Foundation.ObjectService.Data;
 using Foundation.ObjectService.Security;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Foundation.ObjectService.WebUI
 {
@@ -108,6 +117,13 @@ namespace Foundation.ObjectService.WebUI
                 options.Audience = Common.GetConfigurationVariable(Configuration, "OAUTH2_CLIENT_ID", "Auth:ApiIdentifier", string.Empty);
             });
 
+            var mongoHost = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_HOST", "MongoDB:Host", "localhost");
+            var mongoPort = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_PORT", "MongoDB:Port", "27017");
+
+            services.AddHealthChecks()
+                .AddCheck("mongodb", new HttpHealthCheck("Database", $"http://{mongoHost}:{mongoPort}"),
+                    null, new List<string> { "ready", "mongo", "db" });
+
             /* These policy names match the names in the [Authorize] attribute(s) in the Controller classes.
              * The HasScopeHandler class is used (see below) to pass/fail the authorization check if authorization
              * has been enabled via the microservice's configuration.
@@ -156,9 +172,35 @@ namespace Foundation.ObjectService.WebUI
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "FDNS Object Microservice API V1");
             });
 
+            app.UseHealthChecks("/health/live", new HealthCheckOptions
+            {
+                // Exclude all checks, just return a 200.
+                Predicate = (check) => false
+            });
+
+            app.UseHealthChecks("/health/ready", new HealthCheckOptions
+            {
+                Predicate = (check) => check.Tags.Contains("ready"),
+                ResponseWriter = WriteResponse
+            });
+
             app.UseAuthentication();
 
             app.UseMvc();
+        }
+
+        private static Task WriteResponse(HttpContext httpContext, HealthReport result)
+        {
+            httpContext.Response.ContentType = "application/json";
+
+            var json = new JObject(
+                new JProperty("status", result.Status.ToString()),
+                new JProperty("results", new JObject(result.Entries.Select(pair =>
+                    new JProperty(pair.Key, new JObject(
+                        new JProperty("status", pair.Value.Status.ToString()),
+                        new JProperty("description", pair.Value.Description),
+                        new JProperty("data", new JObject(pair.Value.Data.Select(p => new JProperty(p.Key, p.Value))))))))));
+            return httpContext.Response.WriteAsync(json.ToString(Formatting.Indented));
         }
 
         private string BuildMongoDbConnectionString()

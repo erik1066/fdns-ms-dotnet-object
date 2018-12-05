@@ -57,6 +57,12 @@ To run tests from the command line:
 1. `cd` to the `fdns-ms-dotnet-object/tests` folder
 1. Execute `dotnet test`
 
+## Readiness and liveness checks
+
+A liveness check is available at `/health/live`. The liveness check returns a 200 OK if the service is running.
+
+A readiness check is available at `/health/ready`. The readiness check shows a status of dependent services such as databases and other microservices. It also checks for degraded performance in addition to whether the services are available.
+
 ## Experimenting with API operations
 
 We use Swagger to automatically generate a live design document based on the underlying C# source code and XML code comments. Swagger allows developers to experiment with and test the API on a running microservice. It also shows you exactly what operations this service exposes to developers. To access the Swagger documentation, add `/swagger` to the end of the service's URL in your web browser, e.g. `https://localhost:5001/swagger`.
