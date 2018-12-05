@@ -167,8 +167,8 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <param name="json">The Json representation of the object to update</param>
         /// <param name="responseFormat">The format of the response type; defaults to 0</param>
         /// <returns>The updated object</returns>
-        [Consumes("text/plain")]
-        [Produces("text/plain")]
+        [Produces("application/json")]
+        [Consumes("application/json")]
         [HttpPut("{db}/{collection}/{id}")]
         [SwaggerResponse(200, "Returns the updated object")]
         [SwaggerResponse(400, "If the route parameters or json payload contain invalid data")]
