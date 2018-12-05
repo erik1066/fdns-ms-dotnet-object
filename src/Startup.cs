@@ -41,9 +41,6 @@ namespace Foundation.ObjectService.WebUI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMemoryCache();
-            services.AddResponseCaching();
-
             string authorizationDomain = Common.GetConfigurationVariable(Configuration, "OAUTH2_ACCESS_TOKEN_URI", "Auth:Domain", string.Empty);
             bool useAuthorization = !string.IsNullOrEmpty(authorizationDomain);
 
