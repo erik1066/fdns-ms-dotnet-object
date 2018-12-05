@@ -1,7 +1,7 @@
 # Build stage
 FROM microsoft/dotnet:2.2.100-sdk-alpine3.8 as build
 
-RUN apk update && apk upgrade --no-cache
+ENV DOTNET_CLI_TELEMETRY_OPTOUT true
 
 COPY src /src
 WORKDIR /src
