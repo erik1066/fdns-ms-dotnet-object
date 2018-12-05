@@ -59,7 +59,6 @@ namespace Foundation.ObjectService.WebUI
                     }
                 );
 
-                //
                 if (useAuthorization)
                 {
                     c.AddSecurityDefinition("Bearer", new ApiKeyScheme { In = "header", Description = "Please enter JWT with Bearer into field", Name = "Authorization", Type = "apiKey" });
@@ -74,9 +73,9 @@ namespace Foundation.ObjectService.WebUI
             });
             services.AddMvc(options =>
             {
-                // .NET Core only supports interpreting data hitting API endpoints in JSON format.
-                // For handling fixed-width ASCII we need to add support for plain text.
-               options.InputFormatters.Add(new TextPlainInputFormatter());
+               options.InputFormatters.Insert(0, new TextPlainInputFormatter());
+               options.InputFormatters.Insert(0, new JsonRawInputFormatter());
+               options.OutputFormatters.Insert(0, new JsonRawOutputFormatter());
             })
             .AddJsonOptions(options =>
             {

@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+
 using Foundation.ObjectService.Data;
 using Foundation.ObjectService.ViewModel;
-using Microsoft.AspNetCore.Authorization;
+
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Foundation.ObjectService.WebUI.Controllers
 {
@@ -34,18 +38,13 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// </summary>
         /// <param name="routeParameters">Required route parameters needed for the find operation</param>
         /// <returns>Object that has the matching id</returns>
-        /// <response code="200">Returns the object that has a matching id</response>
-        /// <response code="400">If the route parameters contain invalid data</response>
-        /// <response code="401">If the HTTP header lacks a valid OAuth2 token</response>
-        /// <response code="403">If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route</response>
-        /// <response code="404">If an object with a matching id is not found</response>
-        [Produces("text/plain")]
+        [Produces("application/json")]
         [HttpGet("{db}/{collection}/{id}")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
-        [ProducesResponseType(404)]
+        [SwaggerResponse(200, "Object returned successfully")]
+        [SwaggerResponse(400, "If there was a client error handling this request")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(404, "If the object with this Id was not found")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
         public async Task<IActionResult> Get([FromRoute] ItemRouteParameters routeParameters)
         {
@@ -80,21 +79,16 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <param name="json">The Json representation of the object to insert</param>
         /// <param name="responseFormat">The format of the response type; defaults to 0</param>
         /// <returns>Object that was inserted</returns>
-        /// <response code="201">Returns the object that was just created</response>
-        /// <response code="400">If the route parameters or json payload contain invalid data</response>
-        /// <response code="401">If the HTTP header lacks a valid OAuth2 token</response>
-        /// <response code="403">If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route</response>
-        /// <response code="406">If the content type is anything other than text/plain</response>
-        /// <response code="413">If the Json payload is too large</response>
-        [Consumes("text/plain")]
-        [Produces("text/plain")]
+        [Produces("application/json")]
+        [Consumes("application/json")]
         [HttpPost("{db}/{collection}/{id}")]
-        [ProducesResponseType(201)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
-        [ProducesResponseType(406)]
-        [ProducesResponseType(413)]
+        [SwaggerResponse(201, "Returns the inserted object")]
+        [SwaggerResponse(400, "If the route parameters or json payload contain invalid data")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(406, "If the content type is invalid")]
+        [SwaggerResponse(413, "If the Json payload is too large")]
+        [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.INSERT_AUTHORIZATION_NAME)]
         public async Task<IActionResult> InsertWithId([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat)
         {
@@ -128,21 +122,16 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <param name="json">The Json representation of the object to insert</param>
         /// <param name="responseFormat" default="0">The format of the response type; defaults to 0</param>
         /// <returns>Object that was inserted</returns>
-        /// <response code="201">Returns the object that was just created</response>
-        /// <response code="400">If the route parameters or json payload contain invalid data</response>
-        /// <response code="401">If the HTTP header lacks a valid OAuth2 token</response>
-        /// <response code="403">If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route</response>
-        /// <response code="406">If the content type is anything other than text/plain</response>
-        /// <response code="413">If the Json payload is too large</response>
-        [Consumes("text/plain")]
-        [Produces("text/plain")]
+        [Produces("application/json")]
+        [Consumes("application/json")]
         [HttpPost("{db}/{collection}")]
-        [ProducesResponseType(201)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
-        [ProducesResponseType(406)]
-        [ProducesResponseType(413)]
+        [SwaggerResponse(201, "Returns the inserted object")]
+        [SwaggerResponse(400, "If the route parameters or json payload contain invalid data")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(406, "If the content type is invalid")]
+        [SwaggerResponse(413, "If the Json payload is too large")]
+        [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.INSERT_AUTHORIZATION_NAME)]
         public async Task<IActionResult> InsertWithNoId([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
         {
@@ -178,23 +167,17 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <param name="json">The Json representation of the object to update</param>
         /// <param name="responseFormat">The format of the response type; defaults to 0</param>
         /// <returns>The updated object</returns>
-        /// <response code="200">Returns the object that was just updated</response>
-        /// <response code="400">If the route parameters or json payload contain invalid data</response>
-        /// <response code="401">If the HTTP header lacks a valid OAuth2 token</response>
-        /// <response code="403">If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route</response>
-        /// <response code="404">If an object with this id is not found in the collection</response>
-        /// <response code="406">If the content type is anything other than text/plain</response>
-        /// <response code="413">If the Json payload is too large</response>
         [Consumes("text/plain")]
         [Produces("text/plain")]
         [HttpPut("{db}/{collection}/{id}")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(406)]
-        [ProducesResponseType(413)]
+        [SwaggerResponse(200, "Returns the updated object")]
+        [SwaggerResponse(400, "If the route parameters or json payload contain invalid data")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(404, "If the object to update cannot be found")]
+        [SwaggerResponse(406, "If the content type is invalid")]
+        [SwaggerResponse(413, "If the Json payload is too large")]
+        [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.UPDATE_AUTHORIZATION_NAME)]
         public async Task<IActionResult> Put([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
         {
@@ -220,18 +203,13 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// </summary>
         /// <param name="routeParameters">Required route parameters needed for the operation</param>
         /// <returns>Whether the item was deleted or not</returns>
-        /// <response code="200">Deletion successful</response>
-        /// <response code="400">If the route parameters contain invalid data</response>
-        /// <response code="401">If the HTTP header lacks a valid OAuth2 token</response>
-        /// <response code="403">If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route</response>
-        /// <response code="404">If an object with this id is not found in the collection</response>
-        [Produces("text/plain")]
+        [Produces("application/json")]
         [HttpDelete("{db}/{collection}/{id}")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
-        [ProducesResponseType(404)]
+        [SwaggerResponse(200, "If the object was deleted successfully", typeof(bool))]
+        [SwaggerResponse(400, "If the route parameters or json payload contain invalid data")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(404, "If the object to delete cannot be found")]
         [Authorize(Common.DELETE_AUTHORIZATION_NAME)]
         public async Task<IActionResult> Delete([FromRoute] ItemRouteParameters routeParameters)
         {
@@ -277,15 +255,16 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <response code="403">If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route</response>
         /// <response code="406">If the find expression is submitted as anything other than text/plain</response>
         /// <response code="413">If the Json payload is too large</response>
-        [Produces("text/plain")]
+        [Produces("application/json")]
         [Consumes("text/plain")]
         [HttpPost("{db}/{collection}/find")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
-        [ProducesResponseType(406)]
-        [ProducesResponseType(413)]
+        [SwaggerResponse(200, "Returns the objects that match the inputs to the find operation")]
+        [SwaggerResponse(400, "If the find expression contains any invalid inputs")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(406, "If the find expression is submitted as anything other than text/plain")]
+        [SwaggerResponse(413, "If the find expression is too large")]
+        [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
         public async Task<IActionResult> Find([FromBody] string findExpression, [FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters)
         {
@@ -317,21 +296,16 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <param name="countExpression">The Json count expression</param>
         /// <param name="routeParameters">Required route parameters needed for the find operation</param>
         /// <returns>Number of objects that match the provided regular expression and inputs</returns>
-        /// <response code="200">Returns the number of objects that match the inputs to the count operation</response>
-        /// <response code="400">If the count expression contains any invalid inputs</response>
-        /// <response code="401">If the HTTP header lacks a valid OAuth2 token</response>
-        /// <response code="403">If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route</response>
-        /// <response code="406">If the count expression is submitted as anything other than text/plain</response>
-        /// <response code="413">If the Json payload is too large</response>
         [Produces("application/json")]
         [Consumes("text/plain")]
         [HttpPost("{db}/{collection}/count")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(403)]
-        [ProducesResponseType(406)]
-        [ProducesResponseType(413)]
+        [SwaggerResponse(200, "Returns the number of objects that match the inputs to the count operation")]
+        [SwaggerResponse(400, "If the find expression contains any invalid inputs")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(406, "If the find expression is submitted as anything other than text/plain")]
+        [SwaggerResponse(413, "If the find expression is too large")]
+        [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
         public async Task<IActionResult> Count([FromBody] string countExpression, [FromRoute] DatabaseRouteParameters routeParameters)
         {
