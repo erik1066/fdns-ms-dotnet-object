@@ -2,7 +2,7 @@ docker-build:
 	docker build \
 		-t fdns-ms-dotnet-object \
 		--rm \
-		--force-run=true \
+		--force-rm=true \
 		--build-arg OBJECT_PORT=9090 \
 		--build-arg OBJECT_MONGO_HOST=mongo \
 		--build-arg OBJECT_MONGO_PORT=27017 \
