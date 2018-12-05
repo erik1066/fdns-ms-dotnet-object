@@ -1,5 +1,5 @@
 # Build stage
-FROM microsoft/dotnet:2.1.500-sdk-alpine as publish
+FROM microsoft/dotnet:2.2.100-sdk-alpine3.8 as build
 
 RUN apk update && apk upgrade --no-cache
 
@@ -9,7 +9,7 @@ WORKDIR /src
 RUN dotnet publish -c Release
 
 # Run stage
-FROM microsoft/dotnet:2.1.6-aspnetcore-runtime-alpine as run
+FROM microsoft/dotnet:2.2.0-aspnetcore-runtime-alpine3.8 as run
 
 RUN apk update && apk upgrade --no-cache
 
@@ -48,7 +48,7 @@ ENV OAUTH2_CLIENT_ID ${OAUTH2_CLIENT_ID}
 ENV OAUTH2_CLIENT_SECRET ${OAUTH2_CLIENT_SECRET}
 ENV SSL_VERIFYING_DISABLE ${SSL_VERIFYING_DISABLE}
 
-COPY --from=publish /src/bin/Release/netcoreapp2.1/publish /app
+COPY --from=build /src/bin/Release/netcoreapp2.2/publish /app
 WORKDIR /app
 
 # don't run as root user

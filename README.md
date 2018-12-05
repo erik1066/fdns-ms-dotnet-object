@@ -1,5 +1,5 @@
 # FDNS Object Microservice
-A microservice for providing an abstraction layer over a NoSQL database engine, with CRUD operations mapped to HTTP verbs. Arbitrary Json is supported without requiring typed objects, enabling reusability across applications. The Object Service is one of three microservices that form the FDNS Data Lake. This repository represents an unofficial re-implementation of the U.S. Centers for Disease Control and Prevention's [Object microservice](https://github.com/CDCgov/fdns-ms-object) using [ASP.NET Core 2.1](https://docs.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-2.1?view=aspnetcore-2.1) instead of [Java Spring](https://spring.io/).
+A microservice for providing an abstraction layer over a NoSQL database engine, with CRUD operations mapped to HTTP verbs. Arbitrary Json is supported without requiring typed objects, enabling reusability across applications. The Object Service is one of three microservices that form the FDNS Data Lake. This repository represents an unofficial re-implementation of the U.S. Centers for Disease Control and Prevention's [Object microservice](https://github.com/CDCgov/fdns-ms-object) using [ASP.NET Core 2.2](https://docs.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-2.2?view=aspnetcore-2.2) instead of [Java Spring](https://spring.io/).
 
 ## Purpose
 

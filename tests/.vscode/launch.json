@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "src/bin/Debug/netcoreapp2.1/Foundation.ObjectService.WebUI.dll",
+            "program": "src/bin/Debug/netcoreapp2.2/Foundation.ObjectService.WebUI.dll",
             "args": [],
             "cwd": "src",
             "stopAtEntry": false,
