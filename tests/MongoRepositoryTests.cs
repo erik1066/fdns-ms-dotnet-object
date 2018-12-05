@@ -66,11 +66,8 @@ namespace Foundation.ObjectService.WebUI.Tests
             var insertResult = repo.InsertAsync("bookstore", "users", 1, json).Result;
             var getResult = repo.GetAsync("bookstore", "users", 1).Result;
 
-            Assert.StartsWith("{ \"_id\" : { \"$oid\" : ", insertResult);
-            Assert.StartsWith("{ \"_id\" : { \"$oid\" : ", getResult);
-
-            Assert.EndsWith(" }, \"Name\" : \"John\", \"id\" : 1 }", insertResult);
-            Assert.EndsWith(" }, \"Name\" : \"John\", \"id\" : 1 }", getResult);
+            Assert.Equal("{ \"_id\" : 1, \"Name\" : \"John\" }", insertResult);
+            Assert.Equal("{ \"_id\" : 1, \"Name\" : \"John\" }", getResult);
         }
 
         [Fact]
@@ -80,16 +77,13 @@ namespace Foundation.ObjectService.WebUI.Tests
             string json = "{ \"Name\" : \"Jane\" }";
 
             var insertResult = repo.InsertAsync("bookstore", "users", 2, json).Result;
-            var insertResultOverwrite = repo.InsertAsync("bookstore", "users", 2, "{ \"Name\": \"John\" }").Result;
+            Assert.Throws<System.AggregateException>(() => 
+                repo.InsertAsync("bookstore", "users", 2, "{ \"Name\": \"John\" }").Result
+            );
             var getResult = repo.GetAsync("bookstore", "users", 2).Result;
 
-            Assert.StartsWith("{ \"_id\" : { \"$oid\" : ", insertResult);
-            Assert.StartsWith("{ \"_id\" : { \"$oid\" : ", insertResultOverwrite);
-            Assert.StartsWith("{ \"_id\" : { \"$oid\" : ", getResult);
-
-            Assert.EndsWith(" }, \"Name\" : \"Jane\", \"id\" : 2 }", insertResult);
-            Assert.EndsWith(" }, \"Name\" : \"Jane\", \"id\" : 2 }", insertResultOverwrite);
-            Assert.EndsWith(" }, \"Name\" : \"Jane\", \"id\" : 2 }", getResult);
+            Assert.Equal("{ \"_id\" : 2, \"Name\" : \"Jane\" }", insertResult);
+            Assert.Equal("{ \"_id\" : 2, \"Name\" : \"Jane\" }", getResult);
         }
 
         [Fact]
@@ -119,9 +113,10 @@ namespace Foundation.ObjectService.WebUI.Tests
 
             var replaceResult = repo.ReplaceAsync("bookstore", "users", 4, json2).Result;
             var getResult2 = repo.GetAsync("bookstore", "users", 4).Result;
+            
+            Assert.Equal("{ \"_id\" : 4, \"Name\" : \"Enrique\" }", getResult1);
+            Assert.Equal("{ \"_id\" : 4, \"Name\" : \"Enrique Hernandez\" }", getResult2);
 
-            Assert.EndsWith(" \"Name\" : \"Enrique\", \"id\" : 4 }", getResult1);
-            Assert.EndsWith(" \"Name\" : \"Enrique Hernandez\", \"id\" : 4 }", getResult2);
             Assert.Equal(insertResult, getResult1);
             Assert.Equal(replaceResult, getResult2);
         }
