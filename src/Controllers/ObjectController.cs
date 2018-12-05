@@ -249,12 +249,6 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <param name="routeParameters">Required route parameters needed for the find operation</param>
         /// <param name="queryParameters">Additional optional parameters to use for the find operation</param>
         /// <returns>Array of objects that match the provided regular expression and inputs</returns>
-        /// <response code="200">Returns the objects that match the inputs to the find operation</response>
-        /// <response code="400">If the find expression contains any invalid inputs</response>
-        /// <response code="401">If the HTTP header lacks a valid OAuth2 token</response>
-        /// <response code="403">If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route</response>
-        /// <response code="406">If the find expression is submitted as anything other than text/plain</response>
-        /// <response code="413">If the Json payload is too large</response>
         [Produces("application/json")]
         [Consumes("text/plain")]
         [HttpPost("{db}/{collection}/find")]
@@ -272,6 +266,38 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
+            var findResults = await _repository.FindAsync(routeParameters.DatabaseName, routeParameters.CollectionName, findExpression, queryParameters.Start, queryParameters.Limit, queryParameters.SortFieldName, System.ComponentModel.ListSortDirection.Ascending);
+            return Ok(findResults);
+        }
+
+        // POST api/1.0/db/collection/search
+        /// <summary>
+        /// Searches for one or more objects that match the specified criteria
+        /// </summary>
+        /// <remarks>
+        /// Sample request to search for one or more documents with a status of 'A'
+        ///
+        ///     GET /api/1.0/db/collection/search?qs=status%3AA
+        ///
+        /// </remarks>
+        /// <param name="qs">The plain text search expression</param>
+        /// <param name="routeParameters">Required route parameters needed for the find operation</param>
+        /// <param name="queryParameters">Additional optional parameters to use for the find operation</param>
+        /// <returns>Array of objects that match the provided regular expression and inputs</returns>
+        [Produces("application/json")]
+        [HttpGet("{db}/{collection}/search")]
+        [SwaggerResponse(200, "Returns the objects that match the inputs to the search operation")]
+        [SwaggerResponse(400, "If the search expression contains any invalid inputs")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        public async Task<IActionResult> Search([FromQuery] string qs, [FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var findExpression = SearchStringConverter.BuildQuery(qs);
             var findResults = await _repository.FindAsync(routeParameters.DatabaseName, routeParameters.CollectionName, findExpression, queryParameters.Start, queryParameters.Limit, queryParameters.SortFieldName, System.ComponentModel.ListSortDirection.Ascending);
             return Ok(findResults);
         }
