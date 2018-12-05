@@ -1,6 +1,6 @@
 # How to use the FDNS Object Service
 
-## Running locally inside a container
+## Running this microservice locally inside a container
 You will need to have the following software installed to run this microservice:
 
 - [Docker](https://docs.docker.com/install/)
@@ -39,9 +39,9 @@ You will need to have the following software installed to debug this microservic
 1. Open a Test classfile from the file list
 1. Select **Debug test** at the top of any of the test methods or **Debug all tests** from the top of the class definition
 
-## Running from the command line
+## Running from the command line without containerization
 
-To run the service from the command line:
+To run the service from the command line as a regular ASP.NET Core web app:
 
 1. Open a terminal window
 1. `cd` to the `fdns-ms-dotnet-object/src` folder
@@ -104,18 +104,16 @@ Enter the following Json into the request body:
 Press **Execute**. You will see an HTTP 201 with the following response body:
 
 ```json
-{ "_id" : { "$oid" : "5b85cfe5e17dec28c0cd2aa0" }, "name" : "Sarah", "age" : 32, "id" : "1" }
+{ "_id" : 1, "name" : "Sarah", "age" : 32 }
 ```
-
-> The `$oid` property will be different for each insert
 
 Notice the response headers. They include a URI to the location of the newly-created object:
 
 ```
 access-control-allow-credentials: true
-access-control-allow-origin: https://localhost:9090
-content-type: text/plain; charset=utf-8
-date: Tue, 28 Aug 2018 22:42:46 GMT
+access-control-allow-origin: *
+content-type: application/json; charset=utf-8
+date: Wed, 05 Dec 2018 13:54:06 GMT
 location: https://localhost:9090/api/1.0/bookstore/customer/1
 server: Kestrel
 transfer-encoding: chunked
@@ -125,7 +123,7 @@ vary: Origin
 Let's retrieve the object we just inserted. Open the route titled "Gets an object" on the Swagger page and press the **Try it out** button. Fill in `1` for the object's Id, `bookstore` for the database name, `customer` for the collection name, and press **Execute**. We receive the same response body:
 
 ```json
-{ "_id" : { "$oid" : "5b85cfe5e17dec28c0cd2aa0" }, "name" : "Sarah", "age" : 32, "id" : "1" }
+{ "_id" : 1, "name" : "Sarah", "age" : 32 }
 ```
 
 If you change the Id to 2 and press **Execute**, notice you will receive an HTTP 404 "Not Found" response.
@@ -139,10 +137,10 @@ Let's update this record and make Sarah a little older. Open the route titled "U
 Press **Execute**. We receive the updated object:
 
 ```json
-{ "_id" : { "$oid" : "5b85cfe5e17dec28c0cd2aa0" }, "name" : "Sarah", "age" : 42, "id" : "1" }
+{ "_id" : 1, "name" : "Sarah", "age" : 42 }
 ```
 
-> The PUT verb that maps to a database UPDATE operation is a wholesale replacement of the object. Whatever you submit overwrites the current object in the underlying database, except for the `_id` and `id` properties, which are immutable.
+> The PUT verb that maps to a database UPDATE operation is a wholesale replacement of the object. Whatever you submit overwrites the current object in the underlying database.
 
 Let's now try to find some records to see how to use the Find route. Before we can do this, insert the following records with `id` values of 2, 3, 4, and 5:
 
@@ -168,19 +166,46 @@ Open the route titled Finds one or more objects that match the specified criteri
 Fill in `bookstore` for the database name and `customer` for the collection name. Do not fill in any of the other inputs and press **Execute**. Notice two objects are returned in an array:
 
 ```json
-[{ "_id" : { "$oid" : "5b85cfe5e17dec28c0cd2aa0" }, "name" : "Sarah", "age" : 42, "id" : "1" }, { "_id" : { "$oid" : "5b85d74ae17dec28c0cd2aa4" }, "name" : "Maria", "age" : 42, "id" : "1" }]
+[
+  {
+    "_id": "1",
+    "name": "Sarah",
+    "age": 42
+  },
+  {
+    "_id": "5",
+    "name": "Maria",
+    "age": 42
+  }
+]
 ```
 
 Let's find out who has an age less than 45. Change the `findExpression` to the following:
 
 ```json
-{ age: { $lt: { 45 } }
+{ age: { $lt: 45 } }
 ```
 
 Press **Execute** and observe the following matching records are returned in a Json array:
 
 ```json
-[{ "_id" : { "$oid" : "5b85cfe5e17dec28c0cd2aa0" }, "name" : "Sarah", "age" : 42, "id" : "1" }, { "_id" : { "$oid" : "5b85d73ee17dec28c0cd2aa1" }, "name" : "John", "age" : 35, "id" : "1" }, { "_id" : { "$oid" : "5b85d74ae17dec28c0cd2aa4" }, "name" : "Maria", "age" : 42, "id" : "1" }]
+[
+  {
+    "_id": "1",
+    "name": "Sarah",
+    "age": 42
+  },
+  {
+    "_id": "2",
+    "name": "John",
+    "age": 35
+  },
+  {
+    "_id": "5",
+    "name": "Maria",
+    "age": 42
+  }
+]
 ```
 
 ## Authorization and Security
@@ -188,14 +213,14 @@ Press **Execute** and observe the following matching records are returned in a J
 This microservice is configurable so that it can be secured via an OAuth2 provider. Each route on the microservice is mapped to a scope. Since the database and collection names are part of the route, and since an OAuth2 token is only valid for the scopes associated with that token, then using OAuth2 and scopes are an effective way to control data access. Consider if a client application called `bookstore` has the following scopes:
 
 ```
-object.bookstore.customers.read
-object.bookstore.customers.insert
-object.bookstore.customers.update
-object.bookstore.books.read
-object.bookstore.books.insert
-object.bookstore.books.update
-object.bookstore.orders.read
-object.bookstore.orders.insert
+fdns.object.bookstore.customers.read
+fdns.object.bookstore.customers.insert
+fdns.object.bookstore.customers.update
+fdns.object.bookstore.books.read
+fdns.object.bookstore.books.insert
+fdns.object.bookstore.books.update
+fdns.object.bookstore.orders.read
+fdns.object.bookstore.orders.insert
 ```
 
 The `bookstore` client application can access `GET api/1.0/bookstore/customers/1` because that route is mapped to one of the above scopes. If the `bookstore` client application instead tried to access `GET api/1.0/coffeshop/orders/15`, they would be denied becase that route is not part of the scope associated with `bookstore`'s access token. CRUD operations can also be controlled at this level such that `PUT api/1.0/coffeshop/orders/8` would be denied, as this corresponds to an UPDATE operation and the above scopes do not include UPDATE rights on the `bookstore/orders` route. Each software application that uses Object can (and should!) be given a different set of scopes to ensure no other applications can access their data.
@@ -206,4 +231,4 @@ An OAuth2-based authorization model with per-application scopes that map to rout
 
 Note that additional Foundation Services provide OAuth2 integration with LDAP and ActiveDirectory.
 
-__Scopes__: This application uses the following scope: `object.*`
+__Scopes__: This application uses the following scope: `fdns.object.*`
