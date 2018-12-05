@@ -82,7 +82,7 @@ namespace Foundation.ObjectService.WebUI
             {
                 options.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
             })
-            .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddCors(options =>
             {
