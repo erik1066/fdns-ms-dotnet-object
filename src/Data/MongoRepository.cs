@@ -23,7 +23,7 @@ namespace Foundation.ObjectService.Data
         private readonly IMongoClient _client = null;
         private readonly JsonWriterSettings _jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Strict };
         private readonly ILogger<MongoRepository> _logger;
-        private const string ID_PROPERTY_NAME = "id";
+        private const string ID_PROPERTY_NAME = "_id";
         private readonly Dictionary<string, HashSet<string>> _immutableCollections;
 
         /// <summary>
