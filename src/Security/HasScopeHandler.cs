@@ -46,7 +46,7 @@ namespace Foundation.ObjectService.Security
                 i++;
             }
 
-            var scope = $"object.{db}.{collection}";
+            var scope = $"fdns.object.{db}.{collection}";
             return scope;
         }
 
@@ -65,7 +65,7 @@ namespace Foundation.ObjectService.Security
                 return Task.CompletedTask;
             }
 
-            /* We need to get the dot-separated path to the collection, such as object.bookstore.customer. This dot-separated
+            /* We need to get the dot-separated path to the collection, such as fdns.object.bookstore.customer. This dot-separated
              * path is mapped to an HTTP route: "object" is the name of the servce (the Object microservice), "bookstore" is
              * the database name, and "customer" is the collection, e.g. /api/1.0/bookstore/customer. Before we can authorize
              * the user we have to build that dot-separated list so we can compare it to one of the scopes that was passed in
