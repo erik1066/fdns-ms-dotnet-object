@@ -56,6 +56,14 @@ namespace Foundation.ObjectService.Data
         Task<bool> DeleteAsync(string databaseName, string collectionName, object id);
 
         /// <summary>
+        /// Deletes a collection
+        /// </summary>
+        /// <param name="databaseName">The database name</param>
+        /// <param name="collectionName">The collection name</param>
+        /// <returns>Whether the deletion was successful</returns>
+        Task<bool> DeleteCollectionAsync(string databaseName, string collectionName);
+
+        /// <summary>
         /// Finds a set of objects that match the specified find criteria
         /// </summary>
         /// <param name="databaseName">The database name</param>

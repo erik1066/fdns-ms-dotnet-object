@@ -214,6 +214,41 @@ namespace Foundation.ObjectService.Data
         }
 
         /// <summary>
+        /// Deletes a collection
+        /// </summary>
+        /// <param name="databaseName">The database name</param>
+        /// <param name="collectionName">The collection name</param>
+        /// <returns>Whether the deletion was successful</returns>
+        public async Task<bool> DeleteCollectionAsync(string databaseName, string collectionName)
+        {
+            try
+            {
+                if (_immutableCollections.ContainsKey(databaseName) && _immutableCollections[databaseName].Contains(collectionName))
+                {
+                    throw new ImmutableCollectionException($"Collection {collectionName} in database {databaseName} is immutable. No items may be deleted.");
+                }
+
+                var database = GetDatabase(databaseName);
+                bool collectionExists = await DoesCollectionExist(database, collectionName);
+
+                if (collectionExists) 
+                {
+                    await database.DropCollectionAsync(collectionName);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Delete collection failed on {databaseName}/{collectionName}");
+                throw ex;
+            }
+        }
+
+        /// <summary>
         /// Finds a set of objects that match the specified find criteria
         /// </summary>
         /// <param name="databaseName">The database name</param>
@@ -287,6 +322,14 @@ namespace Foundation.ObjectService.Data
             }
 
             return regexFind;
+        }
+
+        private async Task<bool> DoesCollectionExist(IMongoDatabase database, string collectionName)
+        {
+            var filter = new BsonDocument("name", collectionName);
+            var collectionCursor = await database.ListCollectionsAsync(new ListCollectionsOptions {Filter = filter});
+            var exists = await collectionCursor.AnyAsync();
+            return exists;
         }
 
         /// <summary>

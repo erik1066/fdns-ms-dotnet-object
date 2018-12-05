@@ -69,7 +69,6 @@ namespace Foundation.ObjectService.WebUI.Controllers
         ///
         ///     POST /api/1.0/db/collection/6
         ///     {
-        ///         "id": 6,
         ///         "status": "A",
         ///         "code": 200
         ///     }
@@ -157,7 +156,6 @@ namespace Foundation.ObjectService.WebUI.Controllers
         ///
         ///     PUT /api/1.0/db/collection/6
         ///     {
-        ///         "id": 6,
         ///         "status": "D",
         ///         "code": 400
         ///     }
@@ -179,7 +177,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(413, "If the Json payload is too large")]
         [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.UPDATE_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> Put([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
+        public async Task<IActionResult> Replace([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
         {
             if (!ModelState.IsValid)
             {
@@ -218,6 +216,37 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
             var deleted = await _repository.DeleteAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id);
+            if (deleted)
+            {
+                return Ok();
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        // DELETE api/1.0/db/collection
+        /// <summary>
+        /// Deletes a collection
+        /// </summary>
+        /// <param name="routeParameters">Required route parameters needed for the operation</param>
+        /// <returns>Whether the collection was deleted or not</returns>
+        [Produces("application/json")]
+        [HttpDelete("{db}/{collection}")]
+        [SwaggerResponse(200, "If the collection was deleted successfully", typeof(bool))]
+        [SwaggerResponse(400, "If the route parameters or json payload contain invalid data")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(404, "If the object to delete cannot be found")]
+        [Authorize(Common.DELETE_AUTHORIZATION_NAME)]
+        public async Task<IActionResult> DeleteCollection([FromRoute] DatabaseRouteParameters routeParameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var deleted = await _repository.DeleteCollectionAsync(routeParameters.DatabaseName, routeParameters.CollectionName);
             if (deleted)
             {
                 return Ok();
