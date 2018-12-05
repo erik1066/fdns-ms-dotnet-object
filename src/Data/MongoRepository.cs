@@ -158,6 +158,7 @@ namespace Foundation.ObjectService.Data
                 }
                 else if (replaceOneResult.IsAcknowledged && replaceOneResult.ModifiedCount == 0)
                 {
+                    _logger.LogWarning($"Replace object attempted on {databaseName}/{collectionName}/{id}, but Mongo acknowledges with an updated count of 0");
                     return string.Empty;
                 }
                 else
@@ -199,6 +200,7 @@ namespace Foundation.ObjectService.Data
                 }
                 else if (deleteOneResult.IsAcknowledged && deleteOneResult.DeletedCount == 0)
                 {
+                    _logger.LogWarning($"Delete object attempted on {databaseName}/{collectionName}/{id}, but Mongo acknowledges with a deleted count of 0");
                     return false;
                 }
                 else
@@ -238,6 +240,7 @@ namespace Foundation.ObjectService.Data
                 }
                 else
                 {
+                    _logger.LogWarning($"Delete collection attempted on {databaseName}/{collectionName}, but the collection does not exist");
                     return false;
                 }
             }
