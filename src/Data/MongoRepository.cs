@@ -72,7 +72,7 @@ namespace Foundation.ObjectService.Data
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Get failed on {databaseName}/{collectionName}/{id}");
-                throw ex;
+                throw;
             }
         }
 
@@ -94,7 +94,7 @@ namespace Foundation.ObjectService.Data
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Get all failed on {databaseName}/{collectionName}");
-                throw ex;
+                throw;
             }
         }
 
@@ -112,7 +112,7 @@ namespace Foundation.ObjectService.Data
             {
                 if (_immutableCollections.ContainsKey(databaseName) && _immutableCollections[databaseName].Contains(collectionName))
                 {
-                    throw new ImmutableCollectionException($"Collection {collectionName} in database {databaseName} is immutable. No new items may be inserted.");
+                    throw new ImmutableCollectionException($"Collection '{collectionName}' in database '{databaseName}' is immutable. No new items may be inserted.");
                 }
 
                 var database = GetDatabase(databaseName);
@@ -121,10 +121,15 @@ namespace Foundation.ObjectService.Data
                 await collection.InsertOneAsync(document);
                 return await GetAsync(databaseName, collectionName, id);
             }
+            catch (ImmutableCollectionException ex)
+            {
+                _logger.LogError(ex, $"Insert failed on {databaseName}/{collectionName}/{id}: Collection '{collectionName}' has been marked as immutable");
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Insert failed on {databaseName}/{collectionName}/{id}");
-                throw ex;
+                throw;
             }
         }
 
@@ -166,10 +171,15 @@ namespace Foundation.ObjectService.Data
                     throw new InvalidOperationException("The replace operation was not acknowledged by MongoDB");
                 }
             }
+            catch (ImmutableCollectionException ex)
+            {
+                _logger.LogError(ex, $"Replace failed on {databaseName}/{collectionName}/{id}: Collection '{collectionName}' has been marked as immutable");
+                throw;
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Update failed on {databaseName}/{collectionName}/{id}");
-                throw ex;
+                _logger.LogError(ex, $"Replace failed on {databaseName}/{collectionName}/{id}");
+                throw;
             }
         }
 
@@ -208,10 +218,15 @@ namespace Foundation.ObjectService.Data
                     throw new InvalidOperationException("The delete operation was not acknowledged by MongoDB");
                 }
             }
+            catch (ImmutableCollectionException ex)
+            {
+                _logger.LogError(ex, $"Delete failed on {databaseName}/{collectionName}/{id}: Collection '{collectionName}' has been marked as immutable");
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Delete failed on {databaseName}/{collectionName}/{id}");
-                throw ex;
+                throw;
             }
         }
 
@@ -244,10 +259,15 @@ namespace Foundation.ObjectService.Data
                     return false;
                 }
             }
+            catch (ImmutableCollectionException ex)
+            {
+                _logger.LogError(ex, $"Delete collection failed on {databaseName}/{collectionName}: Collection '{collectionName}' has been marked as immutable");
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Delete collection failed on {databaseName}/{collectionName}");
-                throw ex;
+                throw;
             }
         }
 
@@ -275,7 +295,7 @@ namespace Foundation.ObjectService.Data
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Find failed on {databaseName}/{collectionName} with arguments start={start}, size={size}, sortFieldName={sortFieldName}");
-                throw ex;
+                throw;
             }
         }
 
@@ -297,7 +317,7 @@ namespace Foundation.ObjectService.Data
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Count failed on {databaseName}/{collectionName}");
-                throw ex;
+                throw;
             }
         }
 
