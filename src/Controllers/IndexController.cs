@@ -8,6 +8,9 @@ using System.Reflection;
 
 namespace Foundation.ObjectService.WebUI.Controllers
 {
+    /// <summary>
+    /// Index route controller class
+    /// </summary>
     [Route("api/1.0")]
     [ApiController]
     public sealed class IndexController : ControllerBase
