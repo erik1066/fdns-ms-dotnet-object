@@ -43,9 +43,10 @@ namespace Foundation.ObjectService.WebUI
         {
             string authorizationDomain = Common.GetConfigurationVariable(Configuration, "OAUTH2_ACCESS_TOKEN_URI", "Auth:Domain", string.Empty);
             bool useAuthorization = !string.IsNullOrEmpty(authorizationDomain);
-
+            
             services.AddSwaggerGen(c =>
             {
+                #region Swagger generation
                 c.SwaggerDoc("v1", new Info
                     {
                         Title = "FDNS Object Microservice API",
@@ -76,7 +77,9 @@ namespace Foundation.ObjectService.WebUI
                 // These two lines are necessary for Swagger to pick up the C# XML comments and show them in the Swagger UI. See https://github.com/domaindrivendev/Swashbuckle.AspNetCore for more details.
                 var filePath = System.IO.Path.Combine(System.AppContext.BaseDirectory, "api.xml");
                 c.IncludeXmlComments(filePath);
+                #endregion
             });
+
             services.AddMvc(options =>
             {
                options.InputFormatters.Insert(0, new TextPlainInputFormatter());
@@ -118,8 +121,9 @@ namespace Foundation.ObjectService.WebUI
             var mongoPort = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_PORT", "MongoDB:Port", "27017");
 
             services.AddHealthChecks()
-                .AddCheck("mongodb", new HttpHealthCheck("Database", $"http://{mongoHost}:{mongoPort}"),
-                    null, new List<string> { "ready", "mongo", "db" });
+                .AddCheck<IHealthCheck>("database", null, new List<string> { "ready", "mongo", "db" });
+
+            services.AddSingleton<IHealthCheck>(provider => new ObjectDatabaseHealthCheck("Database", provider.GetService<IObjectRepository>()));
 
             /* These policy names match the names in the [Authorize] attribute(s) in the Controller classes.
              * The HasScopeHandler class is used (see below) to pass/fail the authorization check if authorization
