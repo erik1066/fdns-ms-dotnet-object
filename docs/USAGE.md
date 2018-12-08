@@ -237,7 +237,7 @@ To see how this works, first insert the following records into the `books` colle
 
 ```json
 { "_id" : 1, "title": "The Red Badge of Courage", "author" : "Stephen Crane", "pages": 112, "isbn": { "isbn-10" : "0486264653", "isbn-13" : "978-0486264653" } }
-{ "_id" : 2, "title": "Don Quixote", "author" : " Miguel De Cervantes", "pages": 992, "isbn": { "isbn-10" : "0060934344", "isbn-13" : "978-0060934347" } }
+{ "_id" : 2, "title": "Don Quixote", "author" : "Miguel De Cervantes", "pages": 992, "isbn": { "isbn-10" : "0060934344", "isbn-13" : "978-0060934347" } }
 { "_id" : 3, "title": "The Secret Garden", "author" : "Frances Hodgson Burnett", "pages": 126, "isbn": { "isbn-10" : "1514665956", "isbn-13" : "978-1514665954" } }
 { "_id" : 4, "title": "A Connecticut Yankee in King Arthur's Court", "author" : "Mark Twain", "pages": 116, "isbn": { "isbn-10" : "1517061385", "isbn-13" : "978-1517061388" } }
 { "_id" : 5, "title": "Moby Dick; Or The Whale", "author" : "Herman Melville", "pages": 458, "isbn": { "isbn-10" : "161382310X", "isbn-13" : "978-1613823101" } }
