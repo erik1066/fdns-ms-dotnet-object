@@ -12,6 +12,7 @@ using MongoDB.Driver.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Foundation.ObjectService.Exceptions;
+using Newtonsoft.Json.Linq;
 
 namespace Foundation.ObjectService.Data
 {
@@ -352,6 +353,35 @@ namespace Foundation.ObjectService.Data
                 _logger.LogError(ex, $"Distinct failed on {databaseName}/{collectionName}/distinct/{fieldName}");
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Aggregates data via an aggregation pipeline and returns an array of objects
+        /// </summary>
+        /// <param name="databaseName">The database name</param>
+        /// <param name="collectionName">The collection name</param>
+        /// <param name="aggregationExpression">The MongoDB-style aggregation expression; see https://docs.mongodb.com/manual/aggregation/</param>
+        /// <returns>List of matching objects</returns>
+        public async Task<string> AggregateAsync(string databaseName, string collectionName, string aggregationExpression)
+        {
+            var database = GetDatabase(databaseName);
+            var collection = GetCollection(database, collectionName);
+            var pipeline = new List<BsonDocument>();
+
+            JArray array = JArray.Parse(aggregationExpression);
+            foreach(JObject o in array.Children<JObject>())
+            {
+                var json = o.ToString();
+                BsonDocument document = BsonDocument.Parse(json);
+                pipeline.Add(document);
+            }
+
+            var result = (await collection.AggregateAsync<BsonDocument> (pipeline)).ToList();
+
+            var jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Strict };
+            var stringifiedDocument = result.ToJson(jsonWriterSettings);
+
+            return stringifiedDocument;
         }
 
         private IFindFluent<BsonDocument, BsonDocument> GetRegularExpressionQuery(string databaseName, string collectionName, string findExpression, int start, int size, string sortFieldName, ListSortDirection sortDirection)

@@ -438,25 +438,63 @@ namespace Foundation.ObjectService.WebUI.Controllers
             }
             catch (System.FormatException ex) when (ex.Message.Contains("String contains extra non-whitespace characters beyond the end of the document", StringComparison.OrdinalIgnoreCase))
             {
-                return StatusCode(400, new ProblemDetails() 
-                {
-                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                    Title = "Bad Request",
-                    Status = 400,
-                    Detail = $"Sytnax error detected in the find expression"
-                });
+                return BadRequestDetail("Sytnax error detected in the find expression");
             }
             catch (System.FormatException ex) when (ex.Message.Contains("Cannot deserialize a", StringComparison.OrdinalIgnoreCase))
             {
-                return StatusCode(400, new ProblemDetails() 
-                {
-                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                    Title = "Bad Request",
-                    Status = 400,
-                    Detail = $"The database rejected this request, likely because one or more objects contain non-string data for the field '{field}'"
-                });
+                return BadRequestDetail($"The database rejected this request, likely because one or more objects contain non-string data for the field '{field}'");
             }
             return Ok(distinctResults);
+        }
+
+        // POST api/1.0/db/collection/aggregate
+        /// <summary>
+        /// Processes and returns data through an aggregation pipeline
+        /// </summary>
+        /// <param name="payload">The Json aggregation payload</param>
+        /// <param name="routeParameters">Required route parameters needed for the find operation</param>
+        /// <returns>Array objects</returns>
+        [Produces("application/json")]
+        [Consumes("text/plain")]
+        [HttpPost("{db}/{collection}/aggregate")]
+        [SwaggerResponse(200, "Returns an array of objects")]
+        [SwaggerResponse(400, "If the aggregation pipeline array contains any invalid inputs")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(404, "If the collection doesn't exist")]
+        [SwaggerResponse(406, "If the payload is submitted as anything other than text/plain")]
+        [SwaggerResponse(413, "If the payload is too large")]
+        [SwaggerResponse(415, "If the media type is invalid")]
+        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        public async Task<IActionResult> Aggregate([FromBody] string payload, [FromRoute] DatabaseRouteParameters routeParameters)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            string aggregateResults = string.Empty;
+
+            try 
+            {
+                aggregateResults = await _repository.AggregateAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
+            }
+            catch (System.FormatException ex)
+            {
+                return BadRequestDetail(ex.Message);
+            }
+            return Ok(aggregateResults);
+        }
+
+        private IActionResult BadRequestDetail(string message)
+        {
+            return StatusCode(400, new ProblemDetails() 
+            {
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                Title = "Bad Request",
+                Status = 400,
+                Detail = message
+            });
         }
 
         private IActionResult ObjectNotFound(string id, string collectionName)

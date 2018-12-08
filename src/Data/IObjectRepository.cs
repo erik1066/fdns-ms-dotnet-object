@@ -94,5 +94,16 @@ namespace Foundation.ObjectService.Data
         /// <param name="findExpression">The MongoDB-style find syntax</param>
         /// <returns>List of distinct values</returns>
         Task<string> GetDistinctAsync(string databaseName, string collectionName, string fieldName, string findExpression);
+
+        /// <summary>
+        /// Aggregates data via an aggregation pipeline and returns an array of objects
+        /// </summary>
+        /// <param name="databaseName">The database name</param>
+        /// <param name="collectionName">The collection name</param>
+        /// <param name="aggregationExpression">The MongoDB-style aggregation expression; see https://docs.mongodb.com/manual/aggregation/</param>
+        /// <returns>List of matching objects</returns>
+        Task<string> AggregateAsync(string databaseName, string collectionName, string aggregationExpression);
+
+        
     }
 }
