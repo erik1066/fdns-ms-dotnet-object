@@ -84,5 +84,15 @@ namespace Foundation.ObjectService.Data
         /// <param name="findExpression">The MongoDB-style find syntax</param>
         /// <returns>Number of matching objects</returns>
         Task<long> CountAsync(string databaseName, string collectionName, string findExpression);
+
+        /// <summary>
+        /// Gets a list of distinct values for a given field
+        /// </summary>
+        /// <param name="databaseName">The database name</param>
+        /// <param name="collectionName">The collection name</param>
+        /// <param name="fieldName">The field name</param>
+        /// <param name="findExpression">The MongoDB-style find syntax</param>
+        /// <returns>List of distinct values</returns>
+        Task<string> GetDistinctAsync(string databaseName, string collectionName, string fieldName, string findExpression);
     }
 }

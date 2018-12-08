@@ -396,6 +396,69 @@ namespace Foundation.ObjectService.WebUI.Controllers
             return Ok(countResults);
         }
 
+        // POST api/1.0/db/collection/distinct/status
+        /// <summary>
+        /// Gets an array of distinct values for a given field
+        /// </summary>
+        /// <remarks>
+        /// Sample request to get the distinct values for the 'status' field:
+        ///
+        ///     POST /api/1.0/object/distinct/status
+        ///     {}
+        ///
+        /// </remarks>
+        /// <param name="findExpression">The Json find expression</param>
+        /// <param name="routeParameters">Required route parameters needed for the find operation</param>
+        /// <param name="field">The field whose distinct values should be returned</param>
+        /// <returns>Array of distinct values for the specified field name, filtered by the specified find expression</returns>
+        [Produces("application/json")]
+        [Consumes("text/plain")]
+        [HttpPost("{db}/{collection}/distinct/{field}")]
+        [SwaggerResponse(200, "Returns the distinct values for the specified field name, filtered by the specified find expression")]
+        [SwaggerResponse(400, "If the find expression contains any invalid inputs")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(404, "If the collection doesn't exist")]
+        [SwaggerResponse(406, "If the find expression is submitted as anything other than text/plain")]
+        [SwaggerResponse(413, "If the find expression is too large")]
+        [SwaggerResponse(415, "If the media type is invalid")]
+        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        public async Task<IActionResult> Distinct([FromBody] string findExpression, [FromRoute] DatabaseRouteParameters routeParameters, [FromRoute] string field)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            string distinctResults = string.Empty;
+
+            try 
+            {
+                distinctResults = await _repository.GetDistinctAsync(routeParameters.DatabaseName, routeParameters.CollectionName, field, findExpression);
+            }
+            catch (System.FormatException ex) when (ex.Message.Contains("String contains extra non-whitespace characters beyond the end of the document", StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(400, new ProblemDetails() 
+                {
+                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                    Title = "Bad Request",
+                    Status = 400,
+                    Detail = $"Sytnax error detected in the find expression"
+                });
+            }
+            catch (System.FormatException ex) when (ex.Message.Contains("Cannot deserialize a", StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(400, new ProblemDetails() 
+                {
+                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                    Title = "Bad Request",
+                    Status = 400,
+                    Detail = $"The database rejected this request, likely because one or more objects contain non-string data for the field '{field}'"
+                });
+            }
+            return Ok(distinctResults);
+        }
+
         private IActionResult ObjectNotFound(string id, string collectionName)
         {
             return StatusCode(404, new ProblemDetails() 

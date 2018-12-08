@@ -288,7 +288,7 @@ namespace Foundation.ObjectService.Data
             {
                 var regexFind = GetRegularExpressionQuery(databaseName, collectionName, findExpression, start, size, sortFieldName, sortDirection);
                 var document = await regexFind.ToListAsync();
-                var jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Strict }; // key part
+                var jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Strict };
                 var stringifiedDocument = document.ToJson(jsonWriterSettings);
                 return stringifiedDocument;
             }
@@ -321,14 +321,47 @@ namespace Foundation.ObjectService.Data
             }
         }
 
+        /// <summary>
+        /// Gets a list of distinct values for a given field
+        /// </summary>
+        /// <param name="databaseName">The database name</param>
+        /// <param name="collectionName">The collection name</param>
+        /// <param name="fieldName">The field name</param>
+        /// <param name="findExpression">The MongoDB-style find syntax</param>
+        /// <returns>List of distinct values</returns>
+        public async Task<string> GetDistinctAsync(string databaseName, string collectionName, string fieldName, string findExpression)
+        {
+            try
+            {
+                var database = GetDatabase(databaseName);
+                var collection = GetCollection(database, collectionName);
+
+                BsonDocument bsonDocument = BsonDocument.Parse(findExpression);
+                FilterDefinition<BsonDocument> filterDefinition = bsonDocument;
+
+                var distinctResults = await collection.DistinctAsync<string>(fieldName, filterDefinition, null);
+                
+                var items = distinctResults.ToList();
+                var jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Strict };
+                var stringifiedDocument = items.ToJson(jsonWriterSettings);
+
+                return stringifiedDocument;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Distinct failed on {databaseName}/{collectionName}/distinct/{fieldName}");
+                throw;
+            }
+        }
+
         private IFindFluent<BsonDocument, BsonDocument> GetRegularExpressionQuery(string databaseName, string collectionName, string findExpression, int start, int size, string sortFieldName, ListSortDirection sortDirection)
         {
             var database = GetDatabase(databaseName);
             var collection = GetCollection(database, collectionName);
 
-            var regexQuery = BsonDocument.Parse(findExpression);
+            BsonDocument bsonDocument = BsonDocument.Parse(findExpression);
             var regexFind = collection
-                .Find(regexQuery)
+                .Find(bsonDocument)
                 .Skip(start)
                 .Limit(size);
 
