@@ -1,5 +1,18 @@
 # How to use the FDNS Object Service
 
+## Table of Contents
+- [Running this microservice locally inside a container](#running-this-microservice-locally-inside-a-container)
+- [Debugging using Visual Studio Code](#debugging-using-visual-studio-code)
+- [Debugging unit tests using Visual Studio Code](#debugging-unit-tests-using-visual-studio-code)
+- [Running from the command line without containerization](#running-from-the-command-line-without-containerization)
+- [Readiness and liveness checks](#readiness-and-liveness-checks)
+- [Experimenting with API operations](#experimenting-with-api-operations)
+- [Writing code to interact with this service](#writing-code-to-interact-with-this-service)
+- [Environment variable configuration](#environment-variable-configuration)
+- [Quick-start guide](#quick-start-guide)
+- [Data pipelining](#data-pipelining)
+- [Authorization and Security](#authorization-and-security)
+
 ## Running this microservice locally inside a container
 You will need to have the following software installed to run this microservice:
 
@@ -213,6 +226,104 @@ Press **Execute** and observe the following matching records are returned in a J
   }
 ]
 ```
+
+## Data pipelining
+
+The Object service also supports data pipelines via the [MongoDB aggregation framework](https://docs.mongodb.com/manual/aggregation/).
+
+In short, you can define an ordered set of complex transformation and filtering stages in a pipeline for MongoDB to process. The result of executing the pipeline is then returned to the user via the Object service.
+
+To see how this works, first insert the following records into the `books` collection of the `bookstore` database:
+
+```json
+{ "_id" : 1, "title": "The Red Badge of Courage", "author" : "Stephen Crane", "pages": 112, "isbn": { "isbn-10" : "0486264653", "isbn-13" : "978-0486264653" } }
+{ "_id" : 2, "title": "Don Quixote", "author" : " Miguel De Cervantes", "pages": 992, "isbn": { "isbn-10" : "0060934344", "isbn-13" : "978-0060934347" } }
+{ "_id" : 3, "title": "The Secret Garden", "author" : "Frances Hodgson Burnett", "pages": 126, "isbn": { "isbn-10" : "1514665956", "isbn-13" : "978-1514665954" } }
+{ "_id" : 4, "title": "A Connecticut Yankee in King Arthur's Court", "author" : "Mark Twain", "pages": 116, "isbn": { "isbn-10" : "1517061385", "isbn-13" : "978-1517061388" } }
+{ "_id" : 5, "title": "Moby Dick; Or The Whale", "author" : "Herman Melville", "pages": 458, "isbn": { "isbn-10" : "161382310X", "isbn-13" : "978-1613823101" } }
+{ "_id" : 6, "title": "Faust", "author" : "Johann Wolfgang Von Goethe", "pages": 158, "isbn": { "isbn-10" : "1503262146", "isbn-13" : "978-1503262140" } }
+```
+
+### Matching
+
+Next, find the `aggregate` route in the Swagger. Specify `books` for the collection and `bookstore` for the database. The first operation we're going to try is a simple `$match` using a regular expression. The [$match operation](https://docs.mongodb.com/manual/reference/operator/aggregation/match/) acts like a search query. Enter the following Json into the `payload` field:
+
+```json
+[
+  { $match: { title: /^(the|a)/i } }
+]
+```
+
+The following results should appear: _The Red Badge of Courage_, _The Secret Garden_, and _A Connecticut Yankee in King Arthur's Court_.
+
+We can add additional conditions to the `$match` operation. For example, if we want to filter the list by all books with a page count of more than 120 pages, we can add another condition:
+
+```json
+[
+  { $match: { title: /^(the|a)/i, pages: { $gt: 120 } } }
+]
+```
+
+### Sorting
+
+We can add a sort pipeline to sort the returned books in descending order based on their page count:
+
+```json
+[
+  { $match: { title: /^(the|a)/i } },
+  { $sort: { pages : -1 } }
+]
+```
+
+### Limiting
+
+If we want to limit our result set to just 2 books, we can do that by adding a `$limit` stage to the pipeline:
+
+```json
+[
+  { $match: { title: /^(the|a)/i } },
+  { $sort: { pages : -1 } },
+  { $limit: 2 }
+]
+```
+
+### Counting
+
+If we want a plain count of the items, rather than all the items, we can do that by adding a `$count` stage:
+
+```json
+[
+  { $match: { title: /^(the|a)/i } },
+  { $sort: { pages : -1 } },
+  { $limit: 2 },
+  { $count: "numberOfBooks" }
+]
+```
+
+### Bucketing
+
+We can also [bucket](https://docs.mongodb.com/manual/reference/operator/aggregation/bucket/#pipe._S_bucket) books into categories. In the example below, books are categorized by their page count, with each category listing the titles of all matching books:
+
+```json
+[
+  {
+    $bucket: {
+      groupBy: "$pages",
+      boundaries: [ 0, 200, 400, 1000 ],
+      default: "Invalid",
+      output: {
+        "count": { $sum: 1 },
+        "titles" : { $push: "$title" }
+      }
+    }
+  }     
+]
+```
+
+### Other pipeline stages
+
+MongoDB supports many more types of pipeline stages. This document has only described some of the most simple ones for the sake of brevity. Please see https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/ for a comprehensive list of supported pipeline stages. See https://docs.mongodb.com/manual/reference/operator/aggregation/ for a list of operators you can use in conjunction with pipeline stages.
+
 
 ## Authorization and Security
 
