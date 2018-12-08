@@ -1,18 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Text;
 using System.Threading.Tasks;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
+using Foundation.ObjectService.Exceptions;
+
 using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
 using MongoDB.Driver.Core;
+using MongoDB.Driver.Linq;
+
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using Foundation.ObjectService.Exceptions;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Foundation.ObjectService.Data
 {
@@ -368,11 +373,10 @@ namespace Foundation.ObjectService.Data
             var collection = GetCollection(database, collectionName);
             var pipeline = new List<BsonDocument>();
 
-            JArray array = JArray.Parse(aggregationExpression);
-            foreach(JObject o in array.Children<JObject>())
+            var pipelineOperations = ParseJsonArray(aggregationExpression);
+            foreach(var operation in pipelineOperations)
             {
-                var json = o.ToString();
-                BsonDocument document = BsonDocument.Parse(json);
+                BsonDocument document = BsonDocument.Parse(operation);
                 pipeline.Add(document);
             }
 
@@ -382,6 +386,55 @@ namespace Foundation.ObjectService.Data
             var stringifiedDocument = result.ToJson(jsonWriterSettings);
 
             return stringifiedDocument;
+        }
+
+        /// <summary>
+        /// Parses a Json array into plain strings
+        /// </summary>
+        /// <remarks>
+        /// This method is necessary because the JArray and other Json.Net APIs will throw exceptions when
+        /// presented with invalid Json, e.g. MongoDB's find and aggregate syntax. While unfortunate, this
+        /// method does work around the problem.
+        /// </remarks>
+        /// <param name="jsonArray">Json array to parse</param>
+        /// <returns>List of string</returns>
+        private List<string> ParseJsonArray(string jsonArray)
+        {
+            string array = jsonArray.Trim();
+            var objects = new List<string>();
+
+            if (!array.StartsWith("[") || !array.EndsWith("]"))
+            {
+                throw new ArgumentException("Json array must start and end with brackets", nameof(jsonArray));
+            }
+
+            var preparedArray = array.Substring(array.IndexOf('{')).TrimEnd(']').Trim(' ');
+
+            int level = 0;
+            int lastIndex = 0;
+
+            for (int i = 0; i < preparedArray.Length; i++)
+            {
+                char character = preparedArray[i];
+
+                if (character.Equals('{'))
+                {
+                    level++;
+                }
+                else if (character.Equals('}'))
+                {
+                    level--;
+
+                    if (level == 0)
+                    {
+                        var obj = preparedArray.Substring(lastIndex, i - lastIndex + 1).Trim(',').Trim();
+                        objects.Add(obj);
+                        lastIndex = i + 1;
+                    }
+                }
+            }
+            
+            return objects;
         }
 
         private IFindFluent<BsonDocument, BsonDocument> GetRegularExpressionQuery(string databaseName, string collectionName, string findExpression, int start, int size, string sortFieldName, ListSortDirection sortDirection)
