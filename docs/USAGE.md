@@ -324,6 +324,34 @@ We can also [bucket](https://docs.mongodb.com/manual/reference/operator/aggregat
 
 MongoDB supports many more types of pipeline stages. This document has only described some of the most simple ones for the sake of brevity. Please see https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/ for a comprehensive list of supported pipeline stages. See https://docs.mongodb.com/manual/reference/operator/aggregation/ for a list of operators you can use in conjunction with pipeline stages.
 
+## Bulk importing of Json arrays and Csv files
+
+The service allows bulk importing of objects via Json arrays and Csv files. See the `/multi` and `/csv` routes, respectively. 
+
+For example, on the `/multi` route, one can insert an array of Json:
+
+```json
+[
+    { "title": "Don Quixote", "author" : " Miguel De Cervantes", "pages": 992 },
+    { "title": "The Secret Garden", "author" : "Frances Hodgson Burnett", "pages": 126 },
+    { "title": "Moby Dick; Or The Whale", "author" : "Herman Melville", "pages": 458 },
+    { "title": "Faust", "author" : "Johann Wolfgang Von Goethe", "pages": 158 }
+]
+```
+
+The service will return the number of inserted objects and the Ids of those objects:
+
+```json
+{
+  "inserted": 4,
+  "ids": [
+    "5c0c1f902ab79c00011bd5ab",
+    "5c0c1f902ab79c00011bd5ac",
+    "5c0c1f902ab79c00011bd5ad",
+    "5c0c1f902ab79c00011bd5ae"
+  ]
+}
+```
 
 ## Authorization and Security
 
