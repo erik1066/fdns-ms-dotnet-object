@@ -71,9 +71,10 @@ namespace Foundation.ObjectService.Data
             {
                 var database = GetDatabase(databaseName);
                 var collection = GetCollection(database, collectionName);
-                var filter = Builders<BsonDocument>.Filter.Eq(ID_PROPERTY_NAME, id);
-                var document = await collection.Find(filter).FirstOrDefaultAsync();
-                return StringifyDocument(document);
+                
+                (var isObjectId, ObjectId objectId) = IsObjectId(id.ToString());
+                BsonDocument findDocument = isObjectId == true ? new BsonDocument(ID_PROPERTY_NAME, objectId) : new BsonDocument(ID_PROPERTY_NAME, id.ToString());
+                return StringifyDocument(await collection.Find(findDocument).FirstOrDefaultAsync());
             }
             catch (Exception ex)
             {
@@ -123,8 +124,24 @@ namespace Foundation.ObjectService.Data
 
                 var database = GetDatabase(databaseName);
                 var collection = GetCollection(database, collectionName);
-                var document = BsonDocument.Parse(ForceAddIdToJsonObject(id, json));
+                var document = BsonDocument.Parse(json);
+
+                if (id != null)
+                {
+                    (var isObjectId, ObjectId objectId) = IsObjectId(id.ToString());
+                    
+                    if (isObjectId)
+                    {
+                        document.Set("_id", objectId);
+                    }
+                    else
+                    {
+                        document.Set("_id", id.ToString());
+                    }
+                }
+                
                 await collection.InsertOneAsync(document);
+                id = document.GetValue("_id");
                 return await GetAsync(databaseName, collectionName, id);
             }
             catch (ImmutableCollectionException ex)
@@ -158,10 +175,11 @@ namespace Foundation.ObjectService.Data
 
                 var database = GetDatabase(databaseName);
                 var collection = GetCollection(database, collectionName);
-                var document = BsonDocument.Parse(ForceAddIdToJsonObject(id, json));
+                var document = BsonDocument.Parse(json);
 
-                var filter = Builders<BsonDocument>.Filter.Eq(ID_PROPERTY_NAME, id);
-                var replaceOneResult = await collection.ReplaceOneAsync(filter, document);
+                (var isObjectId, ObjectId objectId) = IsObjectId(id.ToString());
+                BsonDocument findDocument = isObjectId == true ? new BsonDocument(ID_PROPERTY_NAME, objectId) : new BsonDocument(ID_PROPERTY_NAME, id.ToString());
+                var replaceOneResult = await collection.ReplaceOneAsync(findDocument, document);
 
                 if (replaceOneResult.IsAcknowledged && replaceOneResult.ModifiedCount == 1)
                 {
@@ -207,8 +225,10 @@ namespace Foundation.ObjectService.Data
 
                 var database = GetDatabase(databaseName);
                 var collection = GetCollection(database, collectionName);
-                var filter = Builders<BsonDocument>.Filter.Eq(ID_PROPERTY_NAME, id);
-                var deleteOneResult = await collection.DeleteOneAsync(filter);
+
+                (var isObjectId, ObjectId objectId) = IsObjectId(id.ToString());
+                BsonDocument findDocument = isObjectId == true ? new BsonDocument(ID_PROPERTY_NAME, objectId) : new BsonDocument(ID_PROPERTY_NAME, id.ToString());
+                var deleteOneResult = await collection.DeleteOneAsync(findDocument);
 
                 if (deleteOneResult.IsAcknowledged && deleteOneResult.DeletedCount == 1)
                 {
@@ -557,5 +577,11 @@ namespace Foundation.ObjectService.Data
         }
 
         private string StringifyDocuments(List<BsonDocument> documents) => documents.ToJson(_jsonWriterSettings);
+
+        private (bool, ObjectId) IsObjectId(string id)
+        {
+            bool isObjectId = ObjectId.TryParse(id.ToString(), out ObjectId objectId);
+            return (isObjectId, objectId);
+        }
     }
 }

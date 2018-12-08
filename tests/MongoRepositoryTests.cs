@@ -67,8 +67,8 @@ namespace Foundation.ObjectService.WebUI.Tests
             var insertResult = await repo.InsertAsync("bookstore", "users", 1, json);
             var getResult = await repo.GetAsync("bookstore", "users", 1);
 
-            Assert.Equal("{ \"_id\" : 1, \"Name\" : \"John\" }", insertResult);
-            Assert.Equal("{ \"_id\" : 1, \"Name\" : \"John\" }", getResult);
+            Assert.Equal("{ \"_id\" : \"1\", \"Name\" : \"John\" }", insertResult);
+            Assert.Equal("{ \"_id\" : \"1\", \"Name\" : \"John\" }", getResult);
         }
 
         // Test takes too long, disabling
@@ -101,21 +101,21 @@ namespace Foundation.ObjectService.WebUI.Tests
             MongoRepository repo = new MongoRepository(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
             string json = "{ \"Name\" : \"Jane\" }";
 
-            var insertResult = await repo.InsertAsync("bookstore", "users", 2, json);
+            var insertResult = await repo.InsertAsync("bookstore", "users", "2", json);
             
             try 
             {
-                var secondInsertResult = await repo.InsertAsync("bookstore", "users", 2, "{ \"Name\": \"John\" }");
+                var secondInsertResult = await repo.InsertAsync("bookstore", "users", "2", "{ \"Name\": \"John\" }");
             }
             catch (Exception ex)
             {
                 Assert.IsType<MongoDB.Driver.MongoWriteException>(ex);
             }
 
-            var getResult = repo.GetAsync("bookstore", "users", 2).Result;
+            var getResult = repo.GetAsync("bookstore", "users", "2").Result;
 
-            Assert.Equal("{ \"_id\" : 2, \"Name\" : \"Jane\" }", insertResult);
-            Assert.Equal("{ \"_id\" : 2, \"Name\" : \"Jane\" }", getResult);
+            Assert.Equal("{ \"_id\" : \"2\", \"Name\" : \"Jane\" }", insertResult);
+            Assert.Equal("{ \"_id\" : \"2\", \"Name\" : \"Jane\" }", getResult);
         }
 
         [Fact]
@@ -124,10 +124,10 @@ namespace Foundation.ObjectService.WebUI.Tests
             MongoRepository repo = new MongoRepository(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
             string json = "{ \"Name\" : \"Maria\" }";
 
-            var insertResult = await repo.InsertAsync("bookstore", "users", 3, json);
-            var getResult = await repo.GetAsync("bookstore", "users", 3);
-            var deleteResult = await repo.DeleteAsync("bookstore", "users", 3);
-            var getResultAfterDelete = await repo.GetAsync("bookstore", "users", 3);
+            var insertResult = await repo.InsertAsync("bookstore", "users", "3", json);
+            var getResult = await repo.GetAsync("bookstore", "users", "3");
+            var deleteResult = await repo.DeleteAsync("bookstore", "users", "3");
+            var getResultAfterDelete = await repo.GetAsync("bookstore", "users", "3");
 
             Assert.Null(getResultAfterDelete);
             Assert.True(deleteResult);
@@ -140,14 +140,14 @@ namespace Foundation.ObjectService.WebUI.Tests
             string json1 = "{ \"Name\" : \"Enrique\" }";
             string json2 = "{ \"Name\" : \"Enrique Hernandez\" }";
 
-            var insertResult = await repo.InsertAsync("bookstore", "users", 4, json1);
-            var getResult1 = await repo.GetAsync("bookstore", "users", 4);
+            var insertResult = await repo.InsertAsync("bookstore", "users", "4", json1);
+            var getResult1 = await repo.GetAsync("bookstore", "users", "4");
 
-            var replaceResult = await repo.ReplaceAsync("bookstore", "users", 4, json2);
-            var getResult2 = await repo.GetAsync("bookstore", "users", 4);
+            var replaceResult = await repo.ReplaceAsync("bookstore", "users", "4", json2);
+            var getResult2 = await repo.GetAsync("bookstore", "users", "4");
             
-            Assert.Equal("{ \"_id\" : 4, \"Name\" : \"Enrique\" }", getResult1);
-            Assert.Equal("{ \"_id\" : 4, \"Name\" : \"Enrique Hernandez\" }", getResult2);
+            Assert.Equal("{ \"_id\" : \"4\", \"Name\" : \"Enrique\" }", getResult1);
+            Assert.Equal("{ \"_id\" : \"4\", \"Name\" : \"Enrique Hernandez\" }", getResult2);
 
             Assert.Equal(insertResult, getResult1);
             Assert.Equal(replaceResult, getResult2);
@@ -185,7 +185,7 @@ namespace Foundation.ObjectService.WebUI.Tests
             }
             catch (Exception ex)
             {
-                Assert.IsAssignableFrom<Newtonsoft.Json.JsonException>(ex);
+                Assert.IsAssignableFrom<Exception>(ex);
             }
         }
     }

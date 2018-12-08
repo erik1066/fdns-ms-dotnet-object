@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -14,6 +16,8 @@ using Newtonsoft.Json.Linq;
 
 using Swashbuckle.AspNetCore.Annotations;
 
+using ChoETL;
+
 namespace Foundation.ObjectService.WebUI.Controllers
 {
     /// <summary>
@@ -21,6 +25,9 @@ namespace Foundation.ObjectService.WebUI.Controllers
     /// </summary>
     [Route("api/1.0")]
     [ApiController]
+    [SwaggerResponse(400, "Client error, such as invalid inputs or malformed Json")]
+    [SwaggerResponse(401, "HTTP header lacks a valid OAuth2 token")]
+    [SwaggerResponse(403, "HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
     [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public class ObjectController : ControllerBase
     {
@@ -43,11 +50,8 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <returns>Object that has the matching id</returns>
         [Produces("application/json")]
         [HttpGet("{db}/{collection}/{id}")]
-        [SwaggerResponse(200, "Object returned successfully")]
-        [SwaggerResponse(400, "If there was a client error handling this request")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
-        [SwaggerResponse(404, "If the object with this Id was not found")]
+        [SwaggerResponse(200, "Object returned successfully")]        
+        [SwaggerResponse(404, "The specified object or collection could not be found")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
         public async Task<IActionResult> GetObject([FromRoute] ItemRouteParameters routeParameters)
         {
@@ -85,12 +89,9 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [Consumes("application/json")]
         [HttpPost("{db}/{collection}/{id}")]
         [SwaggerResponse(201, "Returns the inserted object")]
-        [SwaggerResponse(400, "If the route parameters or json payload contain invalid data")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
-        [SwaggerResponse(406, "If the content type is invalid")]
-        [SwaggerResponse(413, "If the Json payload is too large")]
-        [SwaggerResponse(415, "If the media type is invalid")]
+        [SwaggerResponse(406, "Invalid content type")]
+        [SwaggerResponse(413, "The request payload is too large")]
+        [SwaggerResponse(415, "Invalid media type")]
         [Authorize(Common.INSERT_AUTHORIZATION_NAME)]
         public async Task<IActionResult> InsertObjectWithId([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat)
         {
@@ -98,10 +99,20 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
+            string document = string.Empty;
+
+            try 
+            {
+                document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
+            }
+            catch (MongoDB.Driver.MongoWriteException ex)
+            {
+                return BadRequestDetail(ex.Message);
+            }
+
             if (responseFormat == ResponseFormat.OnlyId)
             {
-                document = routeParameters.Id;
+                document = document = GetInsertedJsonResult(new string [] { routeParameters.Id }).ToString();
             }
             return CreatedAtAction(nameof(GetObject), new { id = routeParameters.Id, db = routeParameters.DatabaseName, collection = routeParameters.CollectionName }, document);
         }
@@ -128,12 +139,9 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [Consumes("application/json")]
         [HttpPost("{db}/{collection}")]
         [SwaggerResponse(201, "Returns the inserted object")]
-        [SwaggerResponse(400, "If the route parameters or json payload contain invalid data")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
-        [SwaggerResponse(406, "If the content type is invalid")]
-        [SwaggerResponse(413, "If the Json payload is too large")]
-        [SwaggerResponse(415, "If the media type is invalid")]
+        [SwaggerResponse(406, "Invalid content type")]
+        [SwaggerResponse(413, "The request payload is too large")]
+        [SwaggerResponse(415, "Invalid media type")]
         [Authorize(Common.INSERT_AUTHORIZATION_NAME)]
         public async Task<IActionResult> InsertObjectWithNoId([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
         {
@@ -141,11 +149,14 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var id = System.Guid.NewGuid().ToString();
-            var document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, id, json);
+
+            var document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, null, json);
+            
+            string id = GetObjectId(document);
+
             if (responseFormat == ResponseFormat.OnlyId)
             {
-                document = id;
+                document = GetInsertedJsonResult(new string [] { id }).ToString();
             }
             return CreatedAtAction(nameof(GetObject), new { id = id, db = routeParameters.DatabaseName, collection = routeParameters.CollectionName }, document);
         }
@@ -172,13 +183,10 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [Consumes("application/json")]
         [HttpPut("{db}/{collection}/{id}")]
         [SwaggerResponse(200, "Returns the updated object")]
-        [SwaggerResponse(400, "If the route parameters or json payload contain invalid data")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
-        [SwaggerResponse(404, "If the object to update cannot be found")]
-        [SwaggerResponse(406, "If the content type is invalid")]
-        [SwaggerResponse(413, "If the Json payload is too large")]
-        [SwaggerResponse(415, "If the media type is invalid")]
+        [SwaggerResponse(404, "The specified object or collection could not be found")]
+        [SwaggerResponse(406, "Invalid content type")]
+        [SwaggerResponse(413, "The request payload is too large")]
+        [SwaggerResponse(415, "Invalid media type")]
         [Authorize(Common.UPDATE_AUTHORIZATION_NAME)]
         public async Task<IActionResult> ReplaceObject([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
         {
@@ -191,11 +199,17 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return ObjectNotFound(routeParameters.Id, routeParameters.CollectionName);
             }
+
             if (responseFormat == ResponseFormat.OnlyId)
             {
-                document = routeParameters.Id;
+                string id = GetObjectId(document);
+                document = GetInsertedJsonResult(new string [] { id }).ToString();
+                return Ok(document);
             }
-            return Ok(document);
+            else 
+            {
+                return Ok(document);
+            }
         }
 
         // DELETE api/1.0/db/collection/5
@@ -206,11 +220,8 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <returns>Whether the item was deleted or not</returns>
         [Produces("application/json")]
         [HttpDelete("{db}/{collection}/{id}")]
-        [SwaggerResponse(200, "If the object was deleted successfully", typeof(bool))]
-        [SwaggerResponse(400, "If the route parameters or json payload contain invalid data")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
-        [SwaggerResponse(404, "If the object to delete cannot be found")]
+        [SwaggerResponse(200, "The object was deleted successfully", typeof(bool))]
+        [SwaggerResponse(404, "The specified object or collection could not be found")]
         [Authorize(Common.DELETE_AUTHORIZATION_NAME)]
         public async Task<IActionResult> DeleteObject([FromRoute] ItemRouteParameters routeParameters)
         {
@@ -237,11 +248,8 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <returns>Whether the collection was deleted or not</returns>
         [Produces("application/json")]
         [HttpDelete("{db}/{collection}")]
-        [SwaggerResponse(200, "If the collection was deleted successfully", typeof(bool))]
-        [SwaggerResponse(400, "If the route parameters or json payload contain invalid data")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
-        [SwaggerResponse(404, "If the object to delete cannot be found")]
+        [SwaggerResponse(200, "The collection was deleted successfully", typeof(bool))]
+        [SwaggerResponse(404, "The specified collection could not be found")]
         [Authorize(Common.DELETE_AUTHORIZATION_NAME)]
         public async Task<IActionResult> DeleteCollection([FromRoute] DatabaseRouteParameters routeParameters)
         {
@@ -285,12 +293,10 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [Consumes("text/plain")]
         [HttpPost("{db}/{collection}/find")]
         [SwaggerResponse(200, "Returns the objects that match the inputs to the find operation")]
-        [SwaggerResponse(400, "If the find expression contains any invalid inputs")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
-        [SwaggerResponse(406, "If the find expression is submitted as anything other than text/plain")]
-        [SwaggerResponse(413, "If the find expression is too large")]
-        [SwaggerResponse(415, "If the media type is invalid")]
+        [SwaggerResponse(404, "The specified collection could not be found")]
+        [SwaggerResponse(406, "The request body was submitted as something other than text/plain")]
+        [SwaggerResponse(413, "The request payload is too large")]
+        [SwaggerResponse(415, "Invalid media type")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
         public async Task<IActionResult> FindObjects([FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters, [FromBody] string findExpression)
         {
@@ -319,9 +325,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [Produces("application/json")]
         [HttpGet("{db}/{collection}/search")]
         [SwaggerResponse(200, "Returns the objects that match the inputs to the search operation")]
-        [SwaggerResponse(400, "If the search expression contains any invalid inputs")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(404, "The specified collection could not be found")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
         public async Task<IActionResult> SearchObjects([FromQuery] string qs, [FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters)
         {
@@ -343,9 +347,6 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [Produces("application/json")]
         [HttpGet("{db}/{collection}")]
         [SwaggerResponse(200, "Returns all objects in the specified collection")]
-        [SwaggerResponse(400, "If the route parameters are invalid")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
         public async Task<IActionResult> GetAllObjectsInCollection([FromRoute] DatabaseRouteParameters routeParameters)
         {
@@ -381,12 +382,9 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [Consumes("text/plain")]
         [HttpPost("{db}/{collection}/count")]
         [SwaggerResponse(200, "Returns the number of objects that match the inputs to the count operation")]
-        [SwaggerResponse(400, "If the find expression contains any invalid inputs")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
-        [SwaggerResponse(406, "If the find expression is submitted as anything other than text/plain")]
-        [SwaggerResponse(413, "If the find expression is too large")]
-        [SwaggerResponse(415, "If the media type is invalid")]
+        [SwaggerResponse(406, "The request body was submitted as something other than text/plain")]
+        [SwaggerResponse(413, "The request payload is too large")]
+        [SwaggerResponse(415, "Invalid media type")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
         public async Task<IActionResult> CountObjects([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string countExpression)
         {
@@ -417,13 +415,10 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [Consumes("text/plain")]
         [HttpPost("{db}/{collection}/distinct/{field}")]
         [SwaggerResponse(200, "Returns the distinct values for the specified field name, filtered by the specified find expression")]
-        [SwaggerResponse(400, "If the find expression contains any invalid inputs")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
-        [SwaggerResponse(404, "If the collection doesn't exist")]
-        [SwaggerResponse(406, "If the find expression is submitted as anything other than text/plain")]
-        [SwaggerResponse(413, "If the find expression is too large")]
-        [SwaggerResponse(415, "If the media type is invalid")]
+        [SwaggerResponse(404, "The specified collection could not be found")]
+        [SwaggerResponse(406, "The request body was submitted as something other than text/plain")]
+        [SwaggerResponse(413, "The request payload is too large")]
+        [SwaggerResponse(415, "Invalid media type")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
         public async Task<IActionResult> Distinct([FromRoute] DatabaseRouteParameters routeParameters, [FromRoute] string field, [FromBody] string findExpression)
         {
@@ -460,13 +455,10 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [Consumes("text/plain")]
         [HttpPost("{db}/{collection}/aggregate")]
         [SwaggerResponse(200, "Returns an array of objects")]
-        [SwaggerResponse(400, "If the aggregation pipeline array contains any invalid inputs")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
-        [SwaggerResponse(404, "If the collection doesn't exist")]
-        [SwaggerResponse(406, "If the payload is submitted as anything other than text/plain")]
-        [SwaggerResponse(413, "If the payload is too large")]
-        [SwaggerResponse(415, "If the media type is invalid")]
+        [SwaggerResponse(404, "The specified collection could not be found")]
+        [SwaggerResponse(406, "The request body was submitted as something other than text/plain")]
+        [SwaggerResponse(413, "The request payload is too large")]
+        [SwaggerResponse(415, "Invalid media type")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
         public async Task<IActionResult> Aggregate([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string payload)
         {
@@ -493,7 +485,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// Inserts multiple objects at a time and auto-generates IDs for each object
         /// </summary>
         /// <remarks>
-        /// Sample request to get the distinct values for the 'status' field:
+        /// Sample request to insert four books into the books collection in the bookstore database:
         ///
         ///     POST /api/1.0/multi/bookstore/books
         ///     [
@@ -511,13 +503,10 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [Consumes("application/json")]
         [HttpPost("multi/{db}/{collection}")]
         [SwaggerResponse(200, "Returns an array of ids for the inserted objects and a count of how many objects were inserted")]
-        [SwaggerResponse(400, "If the inputs to this API are invalid")]
-        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
-        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
-        [SwaggerResponse(404, "If the collection doesn't exist")]
-        [SwaggerResponse(406, "If the payload is submitted as anything other than application/json")]
-        [SwaggerResponse(413, "If the payload is too large")]
-        [SwaggerResponse(415, "If the media type is invalid")]
+        [SwaggerResponse(404, "The specified collection could not be found")]
+        [SwaggerResponse(406, "The request body was submitted as something other than application/json")]
+        [SwaggerResponse(413, "The request payload is too large")]
+        [SwaggerResponse(415, "Invalid media type")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
         public async Task<IActionResult> MultiInsert([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string payload)
         {
@@ -527,12 +516,80 @@ namespace Foundation.ObjectService.WebUI.Controllers
             }
 
             var results = await _repository.InsertManyAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
+            return Ok(GetInsertedJsonResult(results));
+        }
 
-            var json = new JObject(
-                new JProperty("inserted", results.Length),
-                new JProperty("ids", new JArray(results)));
+        // POST api/1.0/bulk/db/collection
+        /// <summary>
+        /// Inserts multiple objects at a time from a CSV file and auto-generates IDs for each object
+        /// </summary>
+        /// <param name="csv">The Csv file of objects to insert</param>
+        /// <param name="routeParameters">Required route parameters needed for the bulk insert operation</param>
+        /// <returns>Array of ids for the inserted objects and a count of how many objects were inserted</returns>
+        [Produces("application/json")]
+        [Consumes("multipart/form-data")]
+        [HttpPost("bulk/{db}/{collection}")]
+        [SwaggerResponse(200, "Returns an array of ids for the inserted objects and a count of how many objects were inserted")]
+        [SwaggerResponse(404, "The specified collection could not be found")]
+        [SwaggerResponse(406, "The request body was submitted as something other than application/json")]
+        [SwaggerResponse(413, "The request payload is too large")]
+        [SwaggerResponse(415, "Invalid media type")]
+        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        public async Task<IActionResult> MultiInsertFromCsv([FromRoute] DatabaseRouteParameters routeParameters, IFormFile csv)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            return Ok(json);
+            List<string> rows = new List<string>();
+            
+            if (csv.Length > 0)
+            {
+                var result = string.Empty;
+
+                using (var reader = new System.IO.StreamReader(csv.OpenReadStream()))
+                {
+                    using (var csvReader = new ChoCSVReader(reader)
+                        .WithFirstLineHeader())
+                    {
+                        foreach (var row in csvReader) 
+                        {
+                            rows.Add(row.DumpAsJson());
+                        }
+                    }
+                }
+
+                string payload = "[" + string.Join(',', rows) + "]";
+                var results = await _repository.InsertManyAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
+
+                return Ok(GetInsertedJsonResult(results));
+            }
+            else 
+            {
+                return BadRequestDetail("Csv file has no data");
+            }
+        }
+
+        private JObject GetInsertedJsonResult(string [] results) => new JObject(
+            new JProperty("inserted", results.Length), 
+            new JProperty("ids", 
+                new JArray(results)));
+
+        private string GetObjectId(string document)
+        {
+            string id = string.Empty;            
+            JObject json = JObject.Parse(document);
+
+            var tokens = json.SelectTokens(@"_id.$oid");
+            if (tokens.Count() == 0)
+            {
+                return json["_id"].ToString();
+            }
+            else
+            {
+                return tokens.FirstOrDefault().Value<string>();
+            }
         }
 
         private IActionResult BadRequestDetail(string message)
