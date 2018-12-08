@@ -126,7 +126,7 @@ namespace Foundation.ObjectService.WebUI
                     description: $"{_description} liveness check canceled by server for taking more than {_cancellationThreshold} milliseconds");
             }
 
-            return t.Result;
+            return await t;
         }
     }
 }
