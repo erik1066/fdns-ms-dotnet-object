@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 using Foundation.ObjectService.Data;
+using Foundation.ObjectService.Exceptions;
 using Foundation.ObjectService.ViewModel;
 
 using Newtonsoft.Json.Linq;
@@ -105,7 +106,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
             }
-            catch (MongoDB.Driver.MongoWriteException ex)
+            catch (Exception ex) when (ex is MongoDB.Driver.MongoWriteException || ex is System.FormatException || ex is ImmutableCollectionException)
             {
                 return BadRequestDetail(ex.Message);
             }
@@ -150,7 +151,16 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            var document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, null, json);
+            string document = string.Empty;
+            
+            try 
+            {
+                document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, null, json);
+            }
+            catch (Exception ex) when (ex is MongoDB.Driver.MongoWriteException || ex is System.FormatException || ex is ImmutableCollectionException)
+            {
+                return BadRequestDetail(ex.Message);
+            }
             
             string id = GetObjectId(document);
 
@@ -194,7 +204,18 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var document = await _repository.ReplaceAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
+            
+            string document = string.Empty;
+
+            try 
+            {
+                document = await _repository.ReplaceAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
+            }
+            catch (Exception ex) when (ex is MongoDB.Driver.MongoWriteException || ex is System.FormatException || ex is ImmutableCollectionException)
+            {
+                return BadRequestDetail(ex.Message);
+            }
+
             if (string.IsNullOrEmpty(document))
             {
                 return ObjectNotFound(routeParameters.Id, routeParameters.CollectionName);
@@ -203,7 +224,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             if (responseFormat == ResponseFormat.OnlyId)
             {
                 string id = GetObjectId(document);
-                document = GetInsertedJsonResult(new string [] { id }).ToString();
+                document = GetReplacedJsonResult(new string [] { id }).ToString();
                 return Ok(document);
             }
             else 
@@ -229,7 +250,18 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var deleted = await _repository.DeleteAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id);
+
+            bool deleted = false;
+
+            try 
+            {
+                deleted = await _repository.DeleteAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id);
+            }
+            catch (Exception ex) when (ex is MongoDB.Driver.MongoWriteException || ex is System.FormatException || ex is ImmutableCollectionException)
+            {
+                return BadRequestDetail(ex.Message);
+            }
+
             if (deleted)
             {
                 return Ok();
@@ -573,6 +605,11 @@ namespace Foundation.ObjectService.WebUI.Controllers
 
         private JObject GetInsertedJsonResult(string [] results) => new JObject(
             new JProperty("inserted", results.Length), 
+            new JProperty("ids", 
+                new JArray(results)));
+
+        private JObject GetReplacedJsonResult(string [] results) => new JObject(
+            new JProperty("updated", results.Length), 
             new JProperty("ids", 
                 new JArray(results)));
 
