@@ -104,6 +104,15 @@ namespace Foundation.ObjectService.Data
         /// <returns>List of matching objects</returns>
         Task<string> AggregateAsync(string databaseName, string collectionName, string aggregationExpression);
 
+        /// <summary>
+        /// Inserts multiple objects and auto-generates their ids
+        /// </summary>
+        /// <param name="databaseName">The database name</param>
+        /// <param name="collectionName">The collection name</param>
+        /// <param name="jsonArray">The Json array that contains the objects to be inserted</param>
+        /// <returns>List of ids that were generated for the inserted objects</returns>
+        Task<string[]> InsertManyAsync(string databaseName, string collectionName, string jsonArray);
+
         
     }
 }

@@ -10,6 +10,8 @@ using Microsoft.Extensions.Options;
 using Foundation.ObjectService.Data;
 using Foundation.ObjectService.ViewModel;
 
+using Newtonsoft.Json.Linq;
+
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Foundation.ObjectService.WebUI.Controllers
@@ -290,7 +292,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(413, "If the find expression is too large")]
         [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> FindObjects([FromBody] string findExpression, [FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters)
+        public async Task<IActionResult> FindObjects([FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters, [FromBody] string findExpression)
         {
             if (!ModelState.IsValid)
             {
@@ -373,7 +375,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         ///
         /// </remarks>
         /// <param name="countExpression">The Json count expression</param>
-        /// <param name="routeParameters">Required route parameters needed for the find operation</param>
+        /// <param name="routeParameters">Required route parameters needed for the count operation</param>
         /// <returns>Number of objects that match the provided regular expression and inputs</returns>
         [Produces("application/json")]
         [Consumes("text/plain")]
@@ -386,7 +388,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(413, "If the find expression is too large")]
         [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> CountObjects([FromBody] string countExpression, [FromRoute] DatabaseRouteParameters routeParameters)
+        public async Task<IActionResult> CountObjects([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string countExpression)
         {
             if (!ModelState.IsValid)
             {
@@ -408,7 +410,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         ///
         /// </remarks>
         /// <param name="findExpression">The Json find expression</param>
-        /// <param name="routeParameters">Required route parameters needed for the find operation</param>
+        /// <param name="routeParameters">Required route parameters needed for the distinct operation</param>
         /// <param name="field">The field whose distinct values should be returned</param>
         /// <returns>Array of distinct values for the specified field name, filtered by the specified find expression</returns>
         [Produces("application/json")]
@@ -423,7 +425,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(413, "If the find expression is too large")]
         [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> Distinct([FromBody] string findExpression, [FromRoute] DatabaseRouteParameters routeParameters, [FromRoute] string field)
+        public async Task<IActionResult> Distinct([FromRoute] DatabaseRouteParameters routeParameters, [FromRoute] string field, [FromBody] string findExpression)
         {
             if (!ModelState.IsValid)
             {
@@ -452,7 +454,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// Processes and returns data through an aggregation pipeline
         /// </summary>
         /// <param name="payload">The Json aggregation payload</param>
-        /// <param name="routeParameters">Required route parameters needed for the find operation</param>
+        /// <param name="routeParameters">Required route parameters needed for the aggregate operation</param>
         /// <returns>Array objects</returns>
         [Produces("application/json")]
         [Consumes("text/plain")]
@@ -466,7 +468,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(413, "If the payload is too large")]
         [SwaggerResponse(415, "If the media type is invalid")]
         [Authorize(Common.READ_AUTHORIZATION_NAME)]
-        public async Task<IActionResult> Aggregate([FromBody] string payload, [FromRoute] DatabaseRouteParameters routeParameters)
+        public async Task<IActionResult> Aggregate([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string payload)
         {
             if (!ModelState.IsValid)
             {
@@ -484,6 +486,53 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequestDetail(ex.Message);
             }
             return Ok(aggregateResults);
+        }
+
+        // POST api/1.0/multi/db/collection
+        /// <summary>
+        /// Inserts multiple objects at a time and auto-generates IDs for each object
+        /// </summary>
+        /// <remarks>
+        /// Sample request to get the distinct values for the 'status' field:
+        ///
+        ///     POST /api/1.0/multi/bookstore/books
+        ///     [
+        ///         { "title": "Don Quixote", "author" : " Miguel De Cervantes", "pages": 992 },
+        ///         { "title": "The Secret Garden", "author" : "Frances Hodgson Burnett", "pages": 126 },
+        ///         { "title": "Moby Dick; Or The Whale", "author" : "Herman Melville", "pages": 458 },
+        ///         { "title": "Faust", "author" : "Johann Wolfgang Von Goethe", "pages": 158 }
+        ///     ]
+        ///
+        /// </remarks>
+        /// <param name="payload">The Json array of objects</param>
+        /// <param name="routeParameters">Required route parameters needed for the multi-insert operation</param>
+        /// <returns>Array of ids for the inserted objects and a count of how many objects were inserted</returns>
+        [Produces("application/json")]
+        [Consumes("application/json")]
+        [HttpPost("multi/{db}/{collection}")]
+        [SwaggerResponse(200, "Returns an array of ids for the inserted objects and a count of how many objects were inserted")]
+        [SwaggerResponse(400, "If the inputs to this API are invalid")]
+        [SwaggerResponse(401, "If the HTTP header lacks a valid OAuth2 token")]
+        [SwaggerResponse(403, "If the HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
+        [SwaggerResponse(404, "If the collection doesn't exist")]
+        [SwaggerResponse(406, "If the payload is submitted as anything other than application/json")]
+        [SwaggerResponse(413, "If the payload is too large")]
+        [SwaggerResponse(415, "If the media type is invalid")]
+        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        public async Task<IActionResult> MultiInsert([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string payload)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var results = await _repository.InsertManyAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
+
+            var json = new JObject(
+                new JProperty("inserted", results.Length),
+                new JProperty("ids", new JArray(results)));
+
+            return Ok(json);
         }
 
         private IActionResult BadRequestDetail(string message)

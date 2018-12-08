@@ -389,6 +389,39 @@ namespace Foundation.ObjectService.Data
         }
 
         /// <summary>
+        /// Inserts multiple objects and auto-generates their ids
+        /// </summary>
+        /// <param name="databaseName">The database name</param>
+        /// <param name="collectionName">The collection name</param>
+        /// <param name="jsonArray">The Json array that contains the objects to be inserted</param>
+        /// <returns>List of ids that were generated for the inserted objects</returns>
+        public async Task<string[]> InsertManyAsync(string databaseName, string collectionName, string jsonArray)
+        {
+            var database = GetDatabase(databaseName);
+            var collection = GetCollection(database, collectionName);
+
+            var documents = new List<BsonDocument>();
+
+            JArray array = JArray.Parse(jsonArray);
+            foreach(JObject o in array.Children<JObject>())
+            {
+                var json = o.ToString();
+                BsonDocument document = BsonDocument.Parse(json);
+                documents.Add(document);
+            }
+            
+            await collection.InsertManyAsync(documents);
+
+            List<string> ids = new List<string>();
+            foreach (var document in documents)
+            {
+                ids.Add(document.GetValue("_id").ToString());
+            }
+
+            return ids.ToArray();
+        }
+
+        /// <summary>
         /// Parses a Json array into plain strings
         /// </summary>
         /// <remarks>
@@ -433,7 +466,7 @@ namespace Foundation.ObjectService.Data
                     }
                 }
             }
-            
+
             return objects;
         }
 
