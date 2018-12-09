@@ -43,19 +43,12 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             // Arrange
             var controller = new ObjectController(_fixture.MongoRepository);
+            var collectionName = "books1";
 
             // Act
-            var insertResult = await controller.InsertObjectWithId(new ItemRouteParameters() {
-                DatabaseName = DATABASE_NAME,
-                CollectionName = "books1",
-                Id = id
-            }, insertedJson, ResponseFormat.OnlyId);
+            var insertResult = await controller.InsertObjectWithId(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id }, insertedJson, ResponseFormat.OnlyId);
 
-            var getResult = await controller.GetObject(new ItemRouteParameters() {
-                DatabaseName = DATABASE_NAME,
-                CollectionName = "books1",
-                Id = id
-            });
+            var getResult = await controller.GetObject(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id });
 
             OkObjectResult okResult = ((OkObjectResult)getResult);
             string receivedJson = okResult.Value.ToString();
@@ -73,12 +66,10 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             // Arrange
             var controller = new ObjectController(_fixture.MongoRepository);
+            var collectionName = "books2";
 
             // Act
-            var insertResult = await controller.InsertObjectWithNoId(new ItemRouteParameters() {
-                DatabaseName = DATABASE_NAME,
-                CollectionName = "books2"
-            }, insertedJson, ResponseFormat.OnlyId);
+            var insertResult = await controller.InsertObjectWithNoId(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName }, insertedJson, ResponseFormat.OnlyId);
 
             CreatedAtActionResult createdResult = ((CreatedAtActionResult)insertResult);
             JObject jsonObject = JObject.Parse(createdResult.Value.ToString());
@@ -86,11 +77,7 @@ namespace Foundation.ObjectService.WebUI.Tests
             JArray jsonArray = JArray.Parse(jsonObject["ids"].ToString());
             var id = jsonArray[0].ToString();
 
-            var getResult = await controller.GetObject(new ItemRouteParameters() {
-                DatabaseName = DATABASE_NAME,
-                CollectionName = "books2",
-                Id = id
-            });
+            var getResult = await controller.GetObject(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id });
 
             OkObjectResult okResult = ((OkObjectResult)getResult);
             string receivedJson = okResult.Value.ToString();
@@ -108,13 +95,9 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             // Arrange
             var controller = new ObjectController(_fixture.MongoRepository);
+            var collectionName = "books3";
 
-            var getResult = await controller.GetObject(new ItemRouteParameters() {
-                DatabaseName = DATABASE_NAME,
-                CollectionName = "books3",
-                Id = id
-            });
-
+            var getResult = await controller.GetObject(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id });
             ObjectResult notFoundResult = ((ObjectResult)getResult);
 
             // Assert
@@ -590,6 +573,69 @@ namespace Foundation.ObjectService.WebUI.Tests
         }
 
         #endregion // Single object replacements
+        
+        #region Single object deletion
+
+        [Theory]
+        [InlineData("1", "{ \"title\": \"The Red Badge of Courage\" }")]
+        [InlineData("2", "{ \"title\": \"Don Quixote\" }")]
+        public async Task Delete_Object_by_Primitive_Id(string id, string json)
+        {
+            // Arrange
+            var controller = new ObjectController(_fixture.MongoRepository);
+            var collectionName = "audit1";
+
+            // Act
+            var insertResult = await controller.InsertObjectWithId(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id }, json, ResponseFormat.OnlyId);
+
+            var firstGetResult = await controller.GetObject(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id });
+
+            OkObjectResult okGetResult = ((OkObjectResult)firstGetResult);
+            Assert.Equal(200, okGetResult.StatusCode);
+
+            var deleteResult = await controller.DeleteObject(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id });
+
+            OkResult okDeleteResult = ((OkResult)deleteResult);
+            Assert.Equal(200, okDeleteResult.StatusCode);
+
+            var secondGetResult = await controller.GetObject(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id });
+
+            ObjectResult notFoundGetResult = ((ObjectResult)secondGetResult);
+            Assert.Equal(404, notFoundGetResult.StatusCode);
+        }
+
+        [Theory]
+        [InlineData("{ \"title\": \"The Red Badge of Courage\" }")]
+        [InlineData("{ \"title\": \"Don Quixote\" }")]
+        public async Task Delete_Object_by_ObjectId(string json)
+        {
+            // Arrange
+            var controller = new ObjectController(_fixture.MongoRepository);
+            var collectionName = "audit2";
+
+            // Act
+            var insertResult = await controller.InsertObjectWithNoId(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName }, json, ResponseFormat.OnlyId);
+            CreatedAtActionResult createdResult = ((CreatedAtActionResult)insertResult);
+            JObject jsonObject2 = JObject.Parse(createdResult.Value.ToString());
+            var insertedId = JArray.Parse(jsonObject2["ids"].ToString())[0].ToString();
+
+            var firstGetResult = await controller.GetObject(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = insertedId });
+
+            OkObjectResult okGetResult = ((OkObjectResult)firstGetResult);
+            Assert.Equal(200, okGetResult.StatusCode);
+
+            var deleteResult = await controller.DeleteObject(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = insertedId });
+
+            OkResult okDeleteResult = ((OkResult)deleteResult);
+            Assert.Equal(200, okDeleteResult.StatusCode);
+
+            var secondGetResult = await controller.GetObject(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = insertedId });
+
+            ObjectResult notFoundGetResult = ((ObjectResult)secondGetResult);
+            Assert.Equal(404, notFoundGetResult.StatusCode);
+        }        
+
+        #endregion // Single object deletion
     }
 
     public class ObjectControllerFixture : IDisposable
