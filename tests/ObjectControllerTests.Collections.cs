@@ -59,6 +59,63 @@ namespace Foundation.ObjectService.WebUI.Tests
             Assert.Equal(404, getThirdCollectionMvcResult.StatusCode);
         }
 
+        [Fact]
+        public async Task Get_Collection()
+        {
+            // Arrange
+            var controller = new ObjectController(_fixture.MongoRepository);
+            var collectionName = "orders2";
+
+            var items = new List<string>() 
+            {
+                "{ \"title\": \"The Red Badge of Courage\" }",
+                "{ \"title\": \"Don Quixote\" }",
+                "{ \"title\": \"The Grapes of Wrath\" }",
+                "{ \"title\": \"The Catcher in the Rye\" }",
+                "{ \"title\": \"Slaughterhouse-Five\" }",
+                "{ \"title\": \"Of Mice and Men\" }",
+                "{ \"title\": \"Gone with the Wind\" }",
+                "{ \"title\": \"Fahrenheit 451\" }",
+                "{ \"title\": \"The Old Man and the Sea\" }",
+                "{ \"title\": \"The Great Gatsby\" }"
+            };
+
+            int insertedItems = 0;
+            foreach (var item in items)
+            {
+                var insertResult = await controller.InsertObjectWithNoId(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName }, item, ResponseFormat.OnlyId);
+                var createdResult = ((CreatedAtActionResult)insertResult);
+                if (createdResult.StatusCode == 201)
+                {
+                    insertedItems++;
+                }
+                else
+                {
+                    Assert.True(false); // should not happen!
+                }
+            }
+
+            Assert.Equal(items.Count, insertedItems); // test that all inserts worked as expected
+
+            // Try getting items in collection
+            var getCollectionResult = await controller.GetAllObjectsInCollection(new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName });
+            var getCollectionMvcResult = ((OkObjectResult)getCollectionResult);
+            Assert.Equal(200, getCollectionMvcResult.StatusCode);
+
+            var array = JArray.Parse(getCollectionMvcResult.Value.ToString());
+            Assert.Equal(items.Count, array.Count);
+
+            int i = 0;
+            foreach (var item in array.Children())
+            {
+                Assert.NotNull(item["title"]);
+                Assert.NotNull(item["_id"]);
+                Assert.True(items[i].Contains(item["title"].ToString()));
+                Assert.Null(item["name"]);
+                i++;
+            }
+        }
+
         #endregion // Collection deletion
     }
 }
