@@ -24,7 +24,7 @@ namespace Foundation.ObjectService.WebUI.Tests
 {
     public partial class ObjectControllerTests : IClassFixture<ObjectControllerFixture>
     {
-        #region Collection deletion
+        #region Collections
 
         [Theory]
         [InlineData("1", "{ \"title\": \"The Red Badge of Courage\" }")]
@@ -116,6 +116,92 @@ namespace Foundation.ObjectService.WebUI.Tests
             }
         }
 
-        #endregion // Collection deletion
+        [Fact]
+        public async Task Insert_Multiple_Objects()
+        {
+            // Arrange
+            var controller = new ObjectController(_fixture.MongoRepository);
+            var collectionName = "orders3";
+
+            var items = new List<string>() 
+            {
+                "{ \"title\": \"The Red Badge of Courage\" }",
+                "{ \"title\": \"Don Quixote\" }",
+                "{ \"title\": \"The Grapes of Wrath\" }",
+                "{ \"title\": \"The Catcher in the Rye\" }",
+                "{ \"title\": \"Slaughterhouse-Five\" }",
+                "{ \"title\": \"Of Mice and Men\" }",
+                "{ \"title\": \"Gone with the Wind\" }",
+                "{ \"title\": \"Fahrenheit 451\" }",
+                "{ \"title\": \"The Old Man and the Sea\" }",
+                "{ \"title\": \"The Great Gatsby\" }"
+            };
+
+            var payload = "[" + string.Join(',', items) + "]";
+
+            var insertManyResult = await controller.MultiInsert(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName }, payload);
+            var insertManyMvcResult = ((OkObjectResult)insertManyResult);
+
+            Assert.Equal(200, insertManyMvcResult.StatusCode);
+
+            // Try getting items in collection
+            var getCollectionResult = await controller.GetAllObjectsInCollection(new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName });
+            var getCollectionMvcResult = ((OkObjectResult)getCollectionResult);
+            Assert.Equal(200, getCollectionMvcResult.StatusCode);
+
+            var array = JArray.Parse(getCollectionMvcResult.Value.ToString());
+            Assert.Equal(items.Count, array.Count);
+
+            int i = 0;
+            foreach (var item in array.Children())
+            {
+                Assert.NotNull(item["title"]);
+                Assert.NotNull(item["_id"]);
+                Assert.True(items[i].Contains(item["title"].ToString()));
+                Assert.Null(item["name"]);
+                i++;
+            }
+        }
+
+        [Fact]
+        public async Task Insert_Multiple_Objects_Fail_Malformed_Json()
+        {
+            // Arrange
+            var controller = new ObjectController(_fixture.MongoRepository);
+            var collectionName = "orders4";
+
+            var items = new List<string>() 
+            {
+                "{ \"title\": \"The Red Badge of Courage\" }",
+                "{ \"title\": \"Don Quixote\" }",
+                "{ \"title\": \"The Grapes of Wrath\" }",
+                "{ \"title\": \"The Catcher in the Rye\" }",
+                "{ \"title\": \"Slaughterhouse-Five\" }",
+                "{ \"title\": \"Of Mice and Men\" }",
+                "{ \"title\": \"Gone with the Wind\" }",
+                "{ \"title\": \"Fahrenheit 451\" }",
+                "{ \"title\": \"The Old Man and the Sea\" }",
+                "{ \"title\": \"The Great Gatsby\" }"
+            };
+
+            var payload = "[" + string.Join(',', items); // missing end bracket!
+
+            try 
+            {
+                var insertManyResult = await controller.MultiInsert(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName }, payload);
+                throw new InvalidOperationException();
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<Newtonsoft.Json.JsonReaderException>(ex);
+            }
+
+            // Try getting items in collection
+            var getCollectionResult = await controller.GetAllObjectsInCollection(new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName });
+            var getCollectionMvcResult = ((ObjectResult)getCollectionResult);
+            Assert.Equal(404, getCollectionMvcResult.StatusCode);
+        }
+
+        #endregion // Collections
     }
 }

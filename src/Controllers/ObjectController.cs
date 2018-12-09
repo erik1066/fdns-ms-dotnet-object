@@ -100,16 +100,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            string document = string.Empty;
-
-            try 
-            {
-                document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
-            }
-            catch (Exception ex) when (ex is MongoDB.Driver.MongoWriteException || ex is System.FormatException || ex is ImmutableCollectionException)
-            {
-                return BadRequestDetail(ex.Message);
-            }
+            string document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
 
             if (responseFormat == ResponseFormat.OnlyId)
             {
@@ -151,17 +142,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            string document = string.Empty;
-            
-            try 
-            {
-                document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, null, json);
-            }
-            catch (Exception ex) when (ex is MongoDB.Driver.MongoWriteException || ex is System.FormatException || ex is ImmutableCollectionException)
-            {
-                return BadRequestDetail(ex.Message);
-            }
-            
+            string document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, null, json);            
             string id = GetObjectId(document);
 
             if (responseFormat == ResponseFormat.OnlyId)
@@ -205,16 +186,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
             
-            string document = string.Empty;
-
-            try 
-            {
-                document = await _repository.ReplaceAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
-            }
-            catch (Exception ex) when (ex is MongoDB.Driver.MongoWriteException || ex is System.FormatException || ex is ImmutableCollectionException)
-            {
-                return BadRequestDetail(ex.Message);
-            }
+            string document = await _repository.ReplaceAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
 
             if (string.IsNullOrEmpty(document))
             {
@@ -251,16 +223,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            bool deleted = false;
-
-            try 
-            {
-                deleted = await _repository.DeleteAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id);
-            }
-            catch (Exception ex) when (ex is MongoDB.Driver.MongoWriteException || ex is System.FormatException || ex is ImmutableCollectionException)
-            {
-                return BadRequestDetail(ex.Message);
-            }
+            bool deleted = await _repository.DeleteAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id);
 
             if (deleted)
             {
@@ -438,6 +401,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
+
             var countResults = await _repository.CountAsync(routeParameters.DatabaseName, routeParameters.CollectionName, countExpression);
             return Ok(countResults);
         }
@@ -473,20 +437,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            string distinctResults = string.Empty;
-
-            try 
-            {
-                distinctResults = await _repository.GetDistinctAsync(routeParameters.DatabaseName, routeParameters.CollectionName, field, findExpression);
-            }
-            catch (System.FormatException ex) when (ex.Message.Contains("String contains extra non-whitespace characters beyond the end of the document", StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequestDetail("Sytnax error detected in the find expression");
-            }
-            catch (System.FormatException ex) when (ex.Message.Contains("Cannot deserialize a", StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequestDetail($"The database rejected this request, likely because one or more objects contain non-string data for the field '{field}'");
-            }
+            string distinctResults = await _repository.GetDistinctAsync(routeParameters.DatabaseName, routeParameters.CollectionName, field, findExpression);
             return Ok(distinctResults);
         }
 
@@ -513,16 +464,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            string aggregateResults = string.Empty;
-
-            try 
-            {
-                aggregateResults = await _repository.AggregateAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
-            }
-            catch (System.FormatException ex)
-            {
-                return BadRequestDetail(ex.Message);
-            }
+            var aggregateResults = await _repository.AggregateAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
             return Ok(aggregateResults);
         }
 
@@ -611,7 +553,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
 
                 return Ok(GetInsertedJsonResult(results));
             }
-            else 
+            else
             {
                 return BadRequestDetail("Csv file has no data");
             }

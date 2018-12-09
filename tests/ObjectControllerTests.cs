@@ -254,13 +254,10 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             // Arrange
             var controller = new ObjectController(_fixture.MongoRepository);
+            string collectionName = "logs5";
 
             // Act - first insert
-            var result1 = await controller.InsertObjectWithId(new ItemRouteParameters() {
-                DatabaseName = DATABASE_NAME,
-                CollectionName = "logs5",
-                Id = id
-            }, json, ResponseFormat.OnlyId);
+            var result1 = await controller.InsertObjectWithId(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id }, json, ResponseFormat.OnlyId);
 
             var expected1 = typeof(CreatedAtActionResult);
 
@@ -271,17 +268,15 @@ namespace Foundation.ObjectService.WebUI.Tests
             Assert.Equal(201, createdResult.StatusCode);
 
             // Act - second insert
-            var result2 = await controller.InsertObjectWithId(new ItemRouteParameters() {
-                DatabaseName = DATABASE_NAME,
-                CollectionName = "logs5",
-                Id = id
-            }, json, ResponseFormat.OnlyId);
-
-            ObjectResult badRequestResult = ((ObjectResult)result2);
-
-            var expected2 = typeof(ObjectResult);
-            Assert.IsType(expected2, result2);
-            Assert.Equal(400, badRequestResult.StatusCode);
+            try 
+            {
+                var result2 = await controller.InsertObjectWithId(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id }, json, ResponseFormat.OnlyId);
+                throw new InvalidOperationException();
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<MongoDB.Driver.MongoWriteException>(ex);
+            }
         }
 
         [Theory]
@@ -292,21 +287,18 @@ namespace Foundation.ObjectService.WebUI.Tests
         // Disallow inserting an object with malformed Json
         public async Task Insert_fails_Malformed_Json(string id, string json)
         {
-            // Arrange
             var controller = new ObjectController(_fixture.MongoRepository);
+            string collectionName = "logs6";
 
-            // Act
-            var result = await controller.InsertObjectWithId(new ItemRouteParameters() {
-                DatabaseName = DATABASE_NAME,
-                CollectionName = "logs6",
-                Id = id
-            }, json, ResponseFormat.OnlyId);
-
-            ObjectResult badRequestResult = ((ObjectResult)result);
-
-            var expected = typeof(ObjectResult);
-            Assert.IsType(expected, result);
-            Assert.Equal(400, badRequestResult.StatusCode);
+            try 
+            {
+                var result = await controller.InsertObjectWithId(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id }, json, ResponseFormat.OnlyId);
+                throw new InvalidOperationException();
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<System.FormatException>(ex);
+            }
         }
 
         [Theory]
@@ -314,21 +306,16 @@ namespace Foundation.ObjectService.WebUI.Tests
         // Disallow inserting an object to an immutable collection
         public async Task Insert_fails_Immutable_Collection(string id, string json)
         {
-            // Arrange
             var controller = new ObjectController(_fixture.MongoRepository);
-
-            // Act
-            var result = await controller.InsertObjectWithId(new ItemRouteParameters() {
-                DatabaseName = "immutabledatabase",
-                CollectionName = "immutablecollection",
-                Id = id
-            }, json, ResponseFormat.OnlyId);
-
-            ObjectResult badRequestResult = ((ObjectResult)result);
-
-            var expected = typeof(ObjectResult);
-            Assert.IsType(expected, result);
-            Assert.Equal(400, badRequestResult.StatusCode);
+            try 
+            {
+                var result = await controller.InsertObjectWithId(new ItemRouteParameters() { DatabaseName = "immutabledatabase", CollectionName = "immutablecollection", Id = id }, json, ResponseFormat.OnlyId);
+                throw new InvalidOperationException();
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<Foundation.ObjectService.Exceptions.ImmutableCollectionException>(ex);
+            }
         }
 
         #endregion // Single object insertions
@@ -534,19 +521,17 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             // Arrange
             var controller = new ObjectController(_fixture.MongoRepository);
+            string collectionName = "customers4";
 
-            // Act
-            var result = await controller.ReplaceObject(new ItemRouteParameters() {
-                DatabaseName = DATABASE_NAME,
-                CollectionName = "customers4",
-                Id = id
-            }, json, ResponseFormat.OnlyId);
-
-            ObjectResult badRequestResult = ((ObjectResult)result);
-
-            var expected = typeof(ObjectResult);
-            Assert.IsType(expected, result);
-            Assert.Equal(400, badRequestResult.StatusCode);
+            try 
+            {
+                var result = await controller.ReplaceObject(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id }, json, ResponseFormat.OnlyId);
+                throw new InvalidOperationException();
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<System.FormatException>(ex);
+            }
         }
 
         [Theory]
@@ -554,21 +539,17 @@ namespace Foundation.ObjectService.WebUI.Tests
         // Disallow replacing an object in an immutable collection
         public async Task Replace_fails_Immutable_Collection(string id, string json)
         {
-            // Arrange
             var controller = new ObjectController(_fixture.MongoRepository);
 
-            // Act
-            var result = await controller.ReplaceObject(new ItemRouteParameters() {
-                DatabaseName = "immutabledatabase",
-                CollectionName = "immutablecollection",
-                Id = id
-            }, json, ResponseFormat.OnlyId);
-
-            ObjectResult badRequestResult = ((ObjectResult)result);
-
-            var expected = typeof(ObjectResult);
-            Assert.IsType(expected, result);
-            Assert.Equal(400, badRequestResult.StatusCode);
+            try 
+            {
+                var result = await controller.ReplaceObject(new ItemRouteParameters() { DatabaseName = "immutabledatabase", CollectionName = "immutablecollection", Id = id }, json, ResponseFormat.OnlyId);
+                throw new InvalidOperationException();
+            }
+            catch (Exception ex)
+            {
+                Assert.IsType<Foundation.ObjectService.Exceptions.ImmutableCollectionException>(ex);
+            }
         }
 
         #endregion // Single object replacements
