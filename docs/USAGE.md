@@ -11,6 +11,7 @@
 - [Environment variable configuration](#environment-variable-configuration)
 - [Quick-start guide](#quick-start-guide)
 - [Data pipelining](#data-pipelining)
+- [Bulk importing of Json arrays and Csv files](#bulk-importing-of-json-arrays-and-csv-files)
 - [Authorization and Security](#authorization-and-security)
 
 ## Running this microservice locally inside a container
