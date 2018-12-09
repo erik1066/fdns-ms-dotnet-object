@@ -22,7 +22,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Foundation.ObjectService.WebUI.Tests
 {
-    public class ObjectControllerTests : IClassFixture<ObjectControllerFixture>
+    public partial class ObjectControllerTests : IClassFixture<ObjectControllerFixture>
     {
         ObjectControllerFixture _fixture;
 
@@ -471,7 +471,6 @@ namespace Foundation.ObjectService.WebUI.Tests
             // Arrange
             var controller = new ObjectController(_fixture.MongoRepository);
 
-            // Act
             // Act - insert first
             var insertResult = await controller.InsertObjectWithNoId(new ItemRouteParameters() {
                 DatabaseName = DATABASE_NAME,

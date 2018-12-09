@@ -113,6 +113,14 @@ namespace Foundation.ObjectService.Data
         /// <returns>List of ids that were generated for the inserted objects</returns>
         Task<string[]> InsertManyAsync(string databaseName, string collectionName, string jsonArray);
 
+        /// <summary>
+        /// Returns whether or not the collection exists in the specified 
+        /// </summary>
+        /// <param name="databaseName">Name of the database that owns the specified collection</param>
+        /// <param name="collectionName">Name of the collection to check</param>
+        /// <returns>bool; whether or not the collection eixsts</returns>
+        Task<bool> DoesCollectionExist(string databaseName, string collectionName);
+
         
     }
 }

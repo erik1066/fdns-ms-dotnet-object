@@ -289,6 +289,13 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
+
+            var exists = await _repository.DoesCollectionExist(routeParameters.DatabaseName, routeParameters.CollectionName);
+            if (!exists)
+            {
+                return CollectionNotFound(routeParameters.CollectionName);
+            }
+
             var deleted = await _repository.DeleteCollectionAsync(routeParameters.DatabaseName, routeParameters.CollectionName);
             if (deleted)
             {
@@ -386,6 +393,13 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
+
+            var exists = await _repository.DoesCollectionExist(routeParameters.DatabaseName, routeParameters.CollectionName);
+            if (!exists)
+            {
+                return CollectionNotFound(routeParameters.CollectionName);
+            }
+            
             var findResults = await _repository.GetAllAsync(routeParameters.DatabaseName, routeParameters.CollectionName);
             return Ok(findResults);
         }

@@ -516,6 +516,18 @@ namespace Foundation.ObjectService.Data
             return regexFind;
         }
 
+        /// <summary>
+        /// Returns whether or not the collection exists in the specified 
+        /// </summary>
+        /// <param name="databaseName">Name of the database that owns the specified collection</param>
+        /// <param name="collectionName">Name of the collection to check</param>
+        /// <returns>bool; whether or not the collection eixsts</returns>
+        public async Task<bool> DoesCollectionExist(string databaseName, string collectionName)
+        {
+            var database = GetDatabase(databaseName);
+            return await DoesCollectionExist(database, collectionName);
+        }
+
         private async Task<bool> DoesCollectionExist(IMongoDatabase database, string collectionName)
         {
             var filter = new BsonDocument("name", collectionName);
