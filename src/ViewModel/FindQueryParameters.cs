@@ -21,7 +21,7 @@ namespace Foundation.ObjectService.ViewModel
         /// The size of the collection that is returned to the client
         /// </summary>
         /// <example>50</example>
-        [Range(0, Int32.MaxValue)]
+        [Range(-1, Int32.MaxValue)]
         [FromQuery(Name = "size")]
         public int Limit { get; set; }
 

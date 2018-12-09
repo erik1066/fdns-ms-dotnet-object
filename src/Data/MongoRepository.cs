@@ -495,6 +495,11 @@ namespace Foundation.ObjectService.Data
             var database = GetDatabase(databaseName);
             var collection = GetCollection(database, collectionName);
 
+            if (size <= -1)
+            {
+                size = Int32.MaxValue;
+            }
+
             BsonDocument bsonDocument = BsonDocument.Parse(findExpression);
             var regexFind = collection
                 .Find(bsonDocument)
