@@ -60,6 +60,67 @@ namespace Foundation.ObjectService
             }
         }
 
+        private static string[] GetSearchTerms(string qs)
+        {
+            bool shouldJoin = false;
+            int startIndex = -1;
+
+            var tokens = new List<(int Position, string Original, string Replaced)>();
+
+            int itemCount = 0;
+            for (int i = 0; i < qs.Length; i++)
+            {
+                char character = qs[i];
+
+                if (character == '"')
+                {
+                    if (shouldJoin)
+                    {
+                        shouldJoin = false;
+                        var piece = qs.Substring(startIndex, i - startIndex);
+
+                        var replacedIndexes = new List<int>(8);
+                        for (int j = 0; i < piece.Length; j++)
+                        {
+                            if (piece[j] == ' ')
+                            {
+                                replacedIndexes.Add(j);
+                            }
+                        }
+                        var formattedPiece = piece.Replace(" ", "_");
+                        qs = qs.Replace(piece, formattedPiece);
+                        (int Position, string Original, string Replaced) tokenInfo = (itemCount, piece, formattedPiece);
+                        tokens.Add(tokenInfo);
+                    }
+                    else
+                    {
+                        shouldJoin = true;
+                        startIndex = i;
+                    }
+                }
+                else if (character == ' ' && shouldJoin == false)
+                {
+                    itemCount++;
+                }
+            }
+
+            string[] terms = qs.Split(" ");
+
+            foreach (var token in tokens)
+            {
+                int position = token.Position;
+                string term = terms[position];
+
+                if (term.Contains(token.Replaced))
+                {
+                    term = term.Replace(token.Replaced, token.Original);
+                    terms[position] = term;
+                }
+            }
+
+            return terms;
+        }
+
         // build the query for MongoDB
 	    public static string BuildQuery(string qs) 
         {
@@ -69,8 +130,9 @@ namespace Foundation.ObjectService
             }
 
 		    JObject json = new JObject();
-		    // build search terms
-		    string[] terms = qs.Split(" ");
+            
+		    string[] terms = GetSearchTerms(qs); 
+
             foreach (var term in terms)
             {			
                 if (term.Contains(">=")) 
@@ -102,7 +164,8 @@ namespace Foundation.ObjectService
                     }
                     else
                     {
-                        json.Add(fieldName, new JObject(BuildAndMergeComparison("ne", fieldName, rawValue, json)));
+                        string formattedRawValue = rawValue.Trim('"');
+                        json.Add(fieldName, new JObject(BuildAndMergeComparison("ne", fieldName, formattedRawValue, json)));
                     }
                 }
                 else if (term.Contains(":")) 
@@ -120,7 +183,8 @@ namespace Foundation.ObjectService
                     }
                     else
                     {
-                        json.Add(fieldName, new JValue(rawValue));
+                        string formattedRawValue = rawValue.Trim('"');
+                        json.Add(fieldName, new JValue(formattedRawValue));
                     }
                 }
             }

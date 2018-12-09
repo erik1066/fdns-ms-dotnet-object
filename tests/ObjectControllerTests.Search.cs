@@ -28,10 +28,23 @@ namespace Foundation.ObjectService.WebUI.Tests
 
         [Theory]
         [InlineData("books101", "pages>464", 2)]
+        [InlineData("books101", "pages>=464", 3)]
         [InlineData("books102", "pages<464", 7)]
+        [InlineData("books103", "pages>=288", 5)]
         [InlineData("books103", "pages:288", 2)]
         [InlineData("books104", "pages!:288", 8)]
         [InlineData("books105", "title:Slaughterhouse-Five", 1)]
+        [InlineData("books105", "title:\"Slaughterhouse-Five\"", 1)]
+        [InlineData("books106", "title:\"The Red Badge of Courage\" pages>50", 1)]
+        [InlineData("books107", "title:\"The Great Gatsby\" pages>250", 0)]
+        [InlineData("books108", "title:\"The Great Gatsby\" pages<250", 1)]
+        [InlineData("books109", "title:\"The Great Gatsby\" pages<250 author:\"F. Scott Fitzgerald\"", 1)]
+        [InlineData("books110", "author:\"John Steinbeck\"", 2)]
+        [InlineData("books111", "author:\"John Steinbeck\" pages<=464", 2)]
+        [InlineData("books112", "author:\"John Steinbeck\" pages<464", 1)]
+        [InlineData("books113", "pages<464 author:\"John Steinbeck\"", 1)]
+        [InlineData("books114", "author:\"Cervantes\"", 0)]
+        [InlineData("books115", "author!:\"John Steinbeck\"", 8)]
         public async Task Search_Collection(string collectionName, string qs, int expectedCount)
         {
             var controller = new ObjectController(_fixture.MongoRepository);
