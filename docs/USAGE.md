@@ -19,7 +19,7 @@ You will need to have the following software installed to run this microservice:
 
 - [Docker](https://docs.docker.com/install/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
-- **Windows Users**: This project uses `Make`. Please use [Cygwin](http://www.cygwin.com/) or the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10) for running the commands in this README.
+- **Windows Users**: This project uses `Make`. Please use [Cygwin](https://www.cygwin.com/) or the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10) for running the commands in this README.
 
 1. Open Bash or a Bash-like terminal
 1. Build the container image by running `make docker-build`
