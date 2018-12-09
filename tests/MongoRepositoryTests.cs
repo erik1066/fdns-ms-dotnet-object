@@ -15,11 +15,11 @@ using Foundation.ObjectService.Data;
 
 namespace Foundation.ObjectService.WebUI.Tests
 {
-    public class MongoRepositoryTests : IClassFixture<ObjectControllerFixture>
+    public class MongoRepositoryTests : IClassFixture<MongoRepositoryFixture>
     {
-        ObjectControllerFixture _mongoFixture;
+        MongoRepositoryFixture _mongoFixture;
 
-        public MongoRepositoryTests(ObjectControllerFixture fixture)
+        public MongoRepositoryTests(MongoRepositoryFixture fixture)
         {
             this._mongoFixture = fixture;
         }
@@ -187,6 +187,32 @@ namespace Foundation.ObjectService.WebUI.Tests
             {
                 Assert.IsAssignableFrom<Exception>(ex);
             }
+        }
+    }
+
+    public class MongoRepositoryFixture : IDisposable
+    {
+        internal static MongoDbRunner _runner;
+
+        public ILogger<MongoRepository> Logger { get; private set; }
+        public IMongoClient MongoClient { get; private set; }
+        public IObjectRepository MongoRepository { get; private set; }
+
+        public MongoRepositoryFixture()
+        {
+            Logger = new Mock<ILogger<MongoRepository>>().Object;
+            _runner = MongoDbRunner.Start();
+            MongoClient = new MongoClient(_runner.ConnectionString);
+
+            var immutables = new Dictionary<string, HashSet<string>>();
+            immutables.Add("immutabledatabase", new HashSet<string>() { "immutablecollection" });
+
+            MongoRepository = new MongoRepository(MongoClient, Logger, immutables);
+        }
+
+        public void Dispose()
+        {
+            _runner.Dispose();
         }
     }
 }

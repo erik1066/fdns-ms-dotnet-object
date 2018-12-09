@@ -625,13 +625,12 @@ namespace Foundation.ObjectService.WebUI.Tests
         public ILogger<MongoRepository> Logger { get; private set; }
         public IMongoClient MongoClient { get; private set; }
         public IObjectRepository MongoRepository { get; private set; }
-        public string MongoConnectionString => $"mongodb://localhost:27018/admin";
 
         public ObjectControllerFixture()
         {
             Logger = new Mock<ILogger<MongoRepository>>().Object;
             _runner = MongoDbRunner.Start();
-            MongoClient = new MongoClient(MongoConnectionString);
+            MongoClient = new MongoClient(_runner.ConnectionString);
 
             var immutables = new Dictionary<string, HashSet<string>>();
             immutables.Add("immutabledatabase", new HashSet<string>() { "immutablecollection" });
@@ -641,10 +640,6 @@ namespace Foundation.ObjectService.WebUI.Tests
 
         public void Dispose()
         {
-            MongoClient.GetDatabase("bookstore").DropCollection("books1");
-            MongoClient.GetDatabase("bookstore").DropCollection("books2");
-            MongoClient.GetDatabase("bookstore").DropCollection("books3");
-            MongoClient.DropDatabase("bookstore");
             _runner.Dispose();
         }
     }
