@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,6 +24,7 @@ using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using MongoDB.Driver;
 using Foundation.ObjectService.Data;
 using Foundation.ObjectService.Security;
 
@@ -101,10 +103,18 @@ namespace Foundation.ObjectService.WebUI
                     .AllowCredentials());
             });
 
-            var mongoDbHostname = BuildMongoDbConnectionString();
+            var mongoConnectionString = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_CONNECTION_STRING", "MongoDB:ConnectionString", "mongodb://localhost:27017");
+            string mongoUseSsl = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_USE_SSL", "MongoDB:UseSsl", "false");
 
-            services.AddSingleton<MongoDB.Driver.IMongoClient>(provider => new MongoDB.Driver.MongoClient(mongoDbHostname));
-            services.AddSingleton<IObjectRepository>(provider => new MongoRepository(provider.GetService<MongoDB.Driver.IMongoClient>(), provider.GetService<ILogger<MongoRepository>>(), GetImmutableCollections()));
+            MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl(mongoConnectionString));
+
+            if (mongoUseSsl.Equals("true", StringComparison.OrdinalIgnoreCase))
+            {
+                settings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
+            }
+
+            services.AddSingleton<IMongoClient>(provider => new MongoClient(settings));
+            services.AddSingleton<IObjectRepository>(provider => new MongoRepository(provider.GetService<IMongoClient>(), provider.GetService<ILogger<MongoRepository>>(), GetImmutableCollections()));
 
             services.AddAuthentication(options =>
             {
@@ -116,9 +126,6 @@ namespace Foundation.ObjectService.WebUI
                 options.Authority = authorizationDomain;
                 options.Audience = Common.GetConfigurationVariable(Configuration, "OAUTH2_CLIENT_ID", "Auth:ApiIdentifier", string.Empty);
             });
-
-            var mongoHost = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_HOST", "MongoDB:Host", "localhost");
-            var mongoPort = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_PORT", "MongoDB:Port", "27017");
 
             services.AddHealthChecks()
                 .AddCheck<IHealthCheck>("database", null, new List<string> { "ready", "mongo", "db" });
@@ -212,20 +219,6 @@ namespace Foundation.ObjectService.WebUI
                         new JProperty("description", pair.Value.Description),
                         new JProperty("data", new JObject(pair.Value.Data.Select(p => new JProperty(p.Key, p.Value))))))))));
             return httpContext.Response.WriteAsync(json.ToString(Formatting.Indented));
-        }
-
-        private string BuildMongoDbConnectionString()
-        {
-            var mongoHost = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_HOST", "MongoDB:Host", "localhost");
-            var mongoPort = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_PORT", "MongoDB:Port", "27017");
-            var mongoUserDatabase = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_USER_DATABASE", "MongoDB:UserDatabase", "admin");
-            var mongoUsername = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_USERNAME", "MongoDB:Username", string.Empty);
-            var mongoPassword = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_PASSWORD", "MongoDB:Password", string.Empty);
-
-            var usernamePassword = string.IsNullOrEmpty(mongoUsername) ? string.Empty : $"{mongoUsername}:{mongoPassword}@";
-            var userDatabase = string.IsNullOrEmpty(mongoUserDatabase) ? string.Empty : $"/{mongoUserDatabase}";
-
-            return $"mongodb://{usernamePassword}{mongoHost}:{mongoPort}{userDatabase}";
         }
 
         private Dictionary<string, HashSet<string>> GetImmutableCollections()

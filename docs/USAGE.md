@@ -94,6 +94,8 @@ If an SDK is unavailable for your language or cannot meet a specific need, then 
 ## Environment variable configuration
 
 * `OBJECT_PORT`: A configurable port the application is set to run on
+* `OBJECT_MONGO_CONNECTION_STRING`: Standard MongoDB connection string, ex: `mongodb://localhost:27017`
+* `OBJECT_MONGO_USE_SSL`: Whether to force TLS 1.2 for the MongoDB connection, ex: `true`
 * `OBJECT_FLUENTD_HOST`: The [Fluentd](https://www.fluentd.org/) hostname
 * `OBJECT_FLUENTD_PORT`: The [Fluentd](https://www.fluentd.org/) port number
 * `OBJECT_PROXY_HOSTNAME`: The hostname of your environment for use with Swagger UI, ex: `api.my.org`

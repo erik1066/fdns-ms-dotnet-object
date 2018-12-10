@@ -30,7 +30,12 @@
                 }
             },
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "OBJECT_MONGO_CONNECTION_STRING": "mongodb://localhost:27017",
+                "OBJECT_MONGO_USE_SSL": "false",
+                "OBJECT_FLUENTD_HOST": "localhost",
+                "OBJECT_FLUENTD_PORT": "24224",
+                "OBJECT_IMMUTABLE": "abcd/def"
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"
