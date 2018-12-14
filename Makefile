@@ -17,6 +17,14 @@ docker-build:
 		--build-arg SSL_VERIFYING_DISABLE=false \
 		.
 
+docker-test:
+	docker build \
+		-t fdns-ms-dotnet-object-tests \
+		-f Dockerfile.test \
+		--rm \
+		--force-rm=true \
+		.
+
 docker-run: docker-start
 docker-start:
 	docker-compose up -d
