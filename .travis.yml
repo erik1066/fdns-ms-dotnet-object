@@ -1,8 +1,24 @@
+language: csharp
 sudo: required
+dist: trusty
+solution: fdns-ms-dotnet-object.sln
+dotnet: 2.2.101
+mono: none
+
+matrix:
+  include:
+  - os: linux
+    dist: xenial # Ubuntu 14.04
+    sudo: required
+  - os: osx
+    osx_image: xcode8.3 # macOS 10.12
 
 services:
   - docker
 
 script:
-  - make docker-test
+  - dotnet --info
+  - dotnet restore fdns-ms-dotnet-object.sln
+  - dotnet build fdns-ms-dotnet-object.sln
+  - dotnet test tests/Foundation.ObjectService.WebUI.Tests.csproj
   - make docker-build
