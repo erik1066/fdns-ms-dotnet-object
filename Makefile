@@ -24,6 +24,7 @@ docker-test:
 		--rm \
 		--force-rm=true \
 		.
+	docker rmi fdns-ms-dotnet-object-tests
 
 docker-run: docker-start
 docker-start:
