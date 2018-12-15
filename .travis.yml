@@ -1,22 +1,8 @@
-language: csharp
 sudo: required
-dist: trusty
-solution: fdns-ms-dotnet-object.sln
-dotnet: 2.2.101
-mono: none
-
-matrix:
-  include:
-  - os: linux
-    dist: xenial # Ubuntu 14.04
-    sudo: required
 
 services:
   - docker
 
 script:
-  - dotnet --info
-  - dotnet restore fdns-ms-dotnet-object.sln
-  - dotnet build fdns-ms-dotnet-object.sln
-  - dotnet test tests/Foundation.ObjectService.WebUI.Tests.csproj
+  - make docker-test
   - make docker-build
