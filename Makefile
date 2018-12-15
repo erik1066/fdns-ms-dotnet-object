@@ -20,7 +20,7 @@ docker-build:
 docker-test:
 	docker build \
 		-t fdns-ms-dotnet-object-tests \
-		-f Dockerfile.test \
+		-f tests/Dockerfile.test \
 		--rm \
 		--force-rm=true \
 		.
