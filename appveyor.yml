@@ -23,6 +23,4 @@ test_script:
   # run the unit tests (requires changing into the test directory)
   - cmd: cd tests
   - cmd: dotnet test
-on_finish :
-  # any cleanup in here
 deploy: off
