@@ -2,6 +2,9 @@
 
 "Object" is a backing service with a simple RESTful API for database operations. Supported operations include CRUD, search, data pipelines, aggregation, and bulk imports.
 
+[![Build Status](https://travis-ci.org/erik1066/fdns-ms-dotnet-object.svg?branch=master)](https://travis-ci.org/erik1066/fdns-ms-dotnet-object)
+[![Docker Pulls](https://img.shields.io/docker/pulls/biohazard501/fdns-ms-dotnet-object.svg)](https://hub.docker.com/r/biohazard501/fdns-ms-dotnet-object/)
+
 Backing services are [factor #4 of the 12-factor app methodology](https://12factor.net/backing-services). Applied to database operations, the result is that virtually all languages and platforms can be used to interact with the database. These includes languages that don't have a Mongo SDK, like Rust, SAS, and R. One can even use a terminal session with `curl`. A deploy of the Object microservice is able to swap out a local Mongo database with one managed by a third party (such as Azure CosmosDB, a managed MongoDB cluster on AWS, or an on-prem Mongo cluster) without any source code changes. 
 
 The Object backing service makes it unnecessary to learn or implement a Mongo SDK to interact with the organization's persistent storage. This is a benefit for data scientists and analysts who are unlikely to have strong software engineering backgrounds. Conversely, analysts and data scientists ought to be very familiar with retreiving data from HTTP API endpoints.
