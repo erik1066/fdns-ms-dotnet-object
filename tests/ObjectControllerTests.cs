@@ -322,12 +322,12 @@ namespace Foundation.ObjectService.WebUI.Tests
 
         #region Single object replacements
         [Theory]
-        [InlineData("1", "{ \"name\": \"A\" }", "A")]
-        [InlineData("6", "{ \"name\": 'C' }", "C")]
-        [InlineData("7", "{ 'name': 'D' }", "D")]
-        [InlineData("8", "{ name: 'E' }", "E")]
+        [InlineData("1", "{ \"name\": \"A\" }", "{ \"name\": \"B\" }", "B")]
+        [InlineData("6", "{ \"name\": 'B' }", "{ \"name\": 'C' }", "C")]
+        [InlineData("7", "{ 'name': 'C' }", "{ 'name': 'D' }", "D")]
+        [InlineData("8", "{ name: 'D' }", "{ 'name': 'E' }", "E")]
         // The service should replace Json objects with specified IDs
-        public async Task Replace_with_Primitive_Id_Full_Response(string id, string json, string expectedName)
+        public async Task Replace_with_Primitive_Id_Full_Response(string id, string json1, string json2, string expectedName)
         {
             // Arrange
             var controller = new ObjectController(_fixture.MongoRepository);
@@ -337,7 +337,7 @@ namespace Foundation.ObjectService.WebUI.Tests
                 DatabaseName = DATABASE_NAME,
                 CollectionName = "customers1",
                 Id = id
-            }, json, ResponseFormat.EntireObject);
+            }, json1, ResponseFormat.EntireObject);
 
             var expectedInsert = typeof(CreatedAtActionResult);
 
@@ -351,7 +351,7 @@ namespace Foundation.ObjectService.WebUI.Tests
                 DatabaseName = DATABASE_NAME,
                 CollectionName = "customers1",
                 Id = id
-            }, json, ResponseFormat.EntireObject);
+            }, json2, ResponseFormat.EntireObject);
 
             var expectedReplace = typeof(OkObjectResult);
             OkObjectResult okResult = ((OkObjectResult)replaceResult);
