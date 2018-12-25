@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using Newtonsoft.Json;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Foundation.ObjectService.Exceptions;
 
@@ -43,6 +44,7 @@ namespace Foundation.ObjectService.WebUI
             else if (exception is JsonReaderException)             code = HttpStatusCode.BadRequest;
             else if (exception is MongoWriteException)             code = HttpStatusCode.BadRequest;
             else if (exception is ImmutableCollectionException)    code = HttpStatusCode.BadRequest;
+            else if (exception is BsonSerializationException)      code = HttpStatusCode.BadRequest;
 
             var result = JsonConvert.SerializeObject(new ProblemDetails() 
             {
