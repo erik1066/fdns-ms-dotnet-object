@@ -68,17 +68,19 @@ namespace Foundation.ObjectService.WebUI.Controllers
             return Ok(document);
         }
 
-        // POST api/1.0/db/collection/6
+        // POST api/1.0/db/collection/1
         /// <summary>
         /// Inserts an object with a specified ID
         /// </summary>
         /// <remarks>
-        /// Sample request to insert a new Json document with an id of 6:
+        /// Sample request to insert a new Json document with an id of 1:
         ///
-        ///     POST /api/1.0/db/collection/6
+        ///     POST /api/1.0/bookstore/books/1
         ///     {
-        ///         "status": "A",
-        ///         "code": 200
+        ///         "title": "War and Peace",
+        ///         "author": "Leo Tolstoy",
+        ///         "year": 1869,
+        ///         "weight": 28.8
         ///     }
         ///
         /// </remarks>
@@ -111,17 +113,34 @@ namespace Foundation.ObjectService.WebUI.Controllers
 
         // POST api/1.0/db/collection
         /// <summary>
-        /// Inserts an object without a specified ID
+        /// Inserts an object without a specified ID. An ID is auto-generated.
         /// </summary>
         /// <remarks>
-        /// Sample request to insert a new Json document:
+        /// Notes on behavior:
+        /// - If the Json payload has no '_id' property, an '_id' property will be created by MongoDB using OID syntax. Ex: "_id" : { "$oid" : "5c211b79b920cb11da0c9086" }
+        /// - If the Json payload has an '_id' property, that value will not be overwritten; whatever is specified in _id will become the object's identifier in MongoDB
+        /// 
+        /// Sample request to insert a new Json document with an database-generated OID:
         ///
-        ///     POST /api/1.0/db/collection
+        ///     POST /api/1.0/bookstore/books
         ///     {
-        ///         "status": "A",
-        ///         "code": 200
+        ///         "title": "Don Quixote",
+        ///         "author": "Miguel de Cervantes",
+        ///         "year": 1615,
+        ///         "weight": 24
         ///     }
-        ///
+        /// 
+        /// <para/>
+        /// Sample request to insert a new Json document with a user-supplied "_id" value:
+        /// 
+        ///     POST /api/1.0/bookstore/books
+        ///     {
+        ///         "_id" : "5367",    
+        ///         "title": "Don Quixote",
+        ///         "author": "Miguel de Cervantes",
+        ///         "year": 1615,
+        ///         "weight": 24
+        ///     }
         /// </remarks>
         /// <param name="routeParameters">Required route parameters needed for the operation</param>
         /// <param name="json">The Json representation of the object to insert</param>
@@ -152,17 +171,19 @@ namespace Foundation.ObjectService.WebUI.Controllers
             return CreatedAtAction(nameof(GetObject), new { id = id, db = routeParameters.DatabaseName, collection = routeParameters.CollectionName }, document);
         }
 
-        // PUT api/1.0/db/collection/5
+        // PUT api/1.0/db/collection/2
         /// <summary>
-        /// Updates an object
+        /// Replaces an object
         /// </summary>
         /// <remarks>
-        /// Sample request to conduct a wholesale replacement of the object with an id of 6:
+        /// Sample request to replace the object that has an id of 2:
         ///
-        ///     PUT /api/1.0/db/collection/6
+        ///     PUT /api/1.0/bookstore/books/2
         ///     {
-        ///         "status": "D",
-        ///         "code": 400
+        ///         "title": "Things Fall Apart",
+        ///         "author": "Chinua Achebe",
+        ///         "year": 1958,
+        ///         "weight": 7.2
         ///     }
         ///
         /// </remarks>
@@ -372,15 +393,14 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// Counts how many objects match the specified criteria
         /// </summary>
         /// <remarks>
-        /// Sample request to count the number of documents with a status of either 'A' or 'D' and that have a code equal to 400:
+        /// Sample request to count the number of books where the author is either John Steinbeck or Margaret Mitchell:
         ///
-        ///     POST /api/1.0/object/count
+        ///     POST /api/1.0/bookstore/books
         ///     {
-        ///         status:
+        ///         author:
         ///         {
-        ///             $in: [ "A", "D" ]
-        ///         },
-        ///         code: 400
+        ///             $in: [ "John Steinbeck", "Margaret Mitchell" ]
+        ///         }
         ///     }
         ///
         /// </remarks>
@@ -411,11 +431,21 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// Gets an array of distinct values for a given field
         /// </summary>
         /// <remarks>
-        /// Sample request to get the distinct values for the 'status' field:
+        /// Sample request to get the distinct values for the 'author' field:
         ///
-        ///     POST /api/1.0/object/distinct/status
+        ///     POST /api/1.0/bookstore/books/distinct/author
         ///     {}
         ///
+        /// Sample reques to get the distinct values for the 'author' field, but only for those books that have a page count greater than or equal to 500:
+        /// 
+        ///     POST /api/1.0/bookstore/books/distinct/author
+        ///     {
+        ///         pages: 
+        ///         {
+        ///             $gte: 500
+        ///         }
+        ///     }
+        /// 
         /// </remarks>
         /// <param name="findExpression">The Json find expression</param>
         /// <param name="routeParameters">Required route parameters needed for the distinct operation</param>
@@ -445,7 +475,38 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <summary>
         /// Processes and returns data through an aggregation pipeline
         /// </summary>
-        /// <param name="payload">The Json aggregation payload</param>
+        /// <remarks>
+        /// An API for data pipelining via the MongoDB aggregation framework (see https://docs.mongodb.com/manual/aggregation/ for more details). Specify pipeline stages in the order you want them to be executed. All MongoDB pipeline stages are supported.
+        /// <para/>
+        /// Sample request to match all items where the title begins with 'the' or 'a', where the results should be sorted by page count in ascending order, and where the results should be limited to five objects:
+        ///
+        ///     POST /api/1.0/bookstore/books/aggregate
+        ///     [
+        ///         { $match: { title: /^(the|a)/i } },
+        ///         { $sort: { pages : -1 } },
+        ///         { $limit: 5 }
+        ///     ]
+        ///
+        /// <para/>
+        /// Sample request to categorize books by their page count where each category lists the titles of all books in that category:
+        ///
+        ///     POST /api/1.0/bookstore/books/aggregate
+        ///     [
+        ///         {
+        ///             $bucket: {
+        ///                 groupBy: "$pages",
+        ///                 boundaries: [ 0, 200, 400, 1000 ],
+        ///                 default: "Invalid",
+        ///                 output: {
+        ///                     "count": { $sum: 1 },
+        ///                     "titles" : { $push: "$title" }
+        ///                 }
+        ///             }
+        ///         }
+        ///     ]
+        ///
+        /// </remarks>
+        /// <param name="payload">The Json aggregation payload. See also: https://docs.mongodb.com/manual/aggregation/</param>
         /// <param name="routeParameters">Required route parameters needed for the aggregate operation</param>
         /// <returns>Array objects</returns>
         [Produces("application/json")]
@@ -473,14 +534,30 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// Inserts multiple objects at a time and auto-generates IDs for each object
         /// </summary>
         /// <remarks>
-        /// Sample request to insert four books into the books collection in the bookstore database:
+        /// Sample request to insert 20 books:
         ///
         ///     POST /api/1.0/multi/bookstore/books
         ///     [
-        ///         { "title": "Don Quixote", "author" : " Miguel De Cervantes", "pages": 992 },
-        ///         { "title": "The Secret Garden", "author" : "Frances Hodgson Burnett", "pages": 126 },
-        ///         { "title": "Moby Dick; Or The Whale", "author" : "Herman Melville", "pages": 458 },
-        ///         { "title": "Faust", "author" : "Johann Wolfgang Von Goethe", "pages": 158 }
+        ///         { "title": "Don Quixote", "author" : "Miguel De Cervantes", "pages": 992, "year": 1615 },
+        ///         { "title": "The Secret Garden", "author" : "Frances Hodgson Burnett", "pages": 126, "year": 1911 },
+        ///         { "title": "Moby Dick; Or The Whale", "author" : "Herman Melville", "pages": 458, "year": 1851 },
+        ///         { "title": "Faust", "author" : "Johann Wolfgang Von Goethe", "pages": 158, "year": 1808 },
+        ///         { "title": "One Hundred Years of Solitude", "author" : "Gabriel García Márquez", "pages": 417, "year": 1982 },
+        ///         { "title": "To Kill a Mockingbird", "author" : "Harper Lee", "pages": 384, "year": 1960 },
+        ///         { "title": "Beloved", "author" : "Toni Morrison", "pages": 321, "year": 1987 },
+        ///         { "title": "Mrs. Dalloway", "author" : "Virginia Woolf", "pages": 214, "year": 1925 },
+        ///         { "title": "Things Fall Apart", "author" : "Chinua Achebe", "pages": 209, "year": 1958 },
+        ///         { "title": "Jane Eyre", "author" : "Charlotte Brontë", "pages": 322, "year": 1947 },
+        ///         { "title": "War and Peace", "author" : "Leo Tolstoy", "pages": 1152, "year": 1869 },
+        ///         { "title": "Crime and Punishment", "author" : "Fyodor Dostoyevsky", "pages": 430, "year": 1866 },
+        ///         { "title": "Metamorphosis", "author" : "Franz Kafka", "pages": 38, "year": 1915 },
+        ///         { "title": "The Red Badge of Courage", "author" : "Stephen Crane", "pages": 112, "year": 1895 },
+        ///         { "title": "The Grapes of Wrath", "author" : "John Steinbeck", "pages": 464, "year": 1939 },
+        ///         { "title": "Gone with the Wind", "author" : "Margaret Mitchell", "pages": 960, "year": 1936 },
+        ///         { "title": "The Old Man and the Sea", "author" : "Ernest Hemingway", "pages": 128, "year": 1952 },
+        ///         { "title": "The Great Gatsby", "author" : "F. Scott Fitzgerald", "pages": 180, "year": 1925 },
+        ///         { "title": "A Passage to India", "author" : "Edward Morgan Forster", "pages": 368, "year": 1924 },
+        ///         { "title": "Of Mice and Men", "author" : "John Steinbeck", "pages": 112, "year": 1937 }
         ///     ]
         ///
         /// </remarks>
