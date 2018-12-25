@@ -1,5 +1,3 @@
-#pragma warning disable 1591 // disables the warnings about missing Xml code comments
-
 using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,5 +28,3 @@ namespace Foundation.ObjectService.WebUI.Controllers
         }
     }
 }
-
-#pragma warning restore 1591
