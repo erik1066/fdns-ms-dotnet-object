@@ -73,6 +73,11 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// Inserts an object with a specified ID
         /// </summary>
         /// <remarks>
+        /// Notes on behavior:
+        /// - An '_id' string property will be added to the Json payload with the value specified in the 'id' route parameter.
+        /// - If the Json payload already has an '_id' property, the value for '_id' will be **overwritten** with the value specified in the 'id' route paramter.
+        /// - If there is already an object in the collection with the specified id, a 400 (bad request) will be returned.
+        /// 
         /// Sample request to insert a new Json document with an id of 1:
         ///
         ///     POST /api/1.0/bookstore/books/1
@@ -176,6 +181,11 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// Replaces an object
         /// </summary>
         /// <remarks>
+        /// Notes on behavior:
+        /// - If the Json payload has no '_id' property, the '_id' value from the object being replaced will be automatically added.
+        /// - If the Json payload has an '_id' property that is different than the argument supplied for the 'id' route parameter, the '_id' value from the object being replaced will overwrite the '_id' value in the Json payload.
+        /// - If there is no object in the collection with a matching id, a 404 (not found) will be returned.
+        /// 
         /// Sample request to replace the object that has an id of 2:
         ///
         ///     PUT /api/1.0/bookstore/books/2
