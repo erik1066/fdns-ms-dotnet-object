@@ -80,14 +80,19 @@ namespace Foundation.ObjectService.WebUI.Tests
                 "{ \"title\": \"The Great Gatsby\" }"
             };
 
-            int insertedItems = 0;
+            int insertedItemsCount = 0;
+            var insertedTitles = new Dictionary<string, string>();
             foreach (var item in items)
             {
-                var insertResult = await controller.InsertObjectWithNoId(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName }, item, ResponseFormat.OnlyId);
+                var insertResult = await controller.InsertObjectWithNoId(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName }, item, ResponseFormat.EntireObject);
                 var createdResult = ((CreatedAtActionResult)insertResult);
                 if (createdResult.StatusCode == 201)
                 {
-                    insertedItems++;
+                    insertedItemsCount++;
+                    JObject obj = JObject.Parse(createdResult.Value.ToString());
+                    var id = obj["_id"].ToString();
+                    var title = obj["title"].ToString();
+                    insertedTitles.Add(id, title);
                 }
                 else
                 {
@@ -95,7 +100,7 @@ namespace Foundation.ObjectService.WebUI.Tests
                 }
             }
 
-            Assert.Equal(items.Count, insertedItems); // test that all inserts worked as expected
+            Assert.Equal(items.Count, insertedItemsCount); // test that all inserts worked as expected
 
             // Try getting items in collection
             var getCollectionResult = await controller.GetAllObjectsInCollection(new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName });
@@ -108,10 +113,14 @@ namespace Foundation.ObjectService.WebUI.Tests
             int i = 0;
             foreach (var item in array.Children())
             {
-                Assert.NotNull(item["title"]);
-                Assert.NotNull(item["_id"]);
-                Assert.True(items[i].Contains(item["title"].ToString()));
+                var title = item["title"].ToString();
+                var id = item["_id"].ToString();
+
+                Assert.NotNull(title);
+                Assert.NotNull(id);
+                Assert.True(items[i].Contains(title));
                 Assert.Null(item["name"]);
+                Assert.Equal(insertedTitles[id], title);
                 i++;
             }
         }
