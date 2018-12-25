@@ -306,15 +306,45 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// Finds one or more objects that match the specified criteria
         /// </summary>
         /// <remarks>
-        /// Sample request to find one or more documents with a status of either 'A' or 'D' and that have a code equal to 400:
+        /// An API for the MongoDB Find operation. See [MongoDB Find Syntax documentation](https://docs.mongodb.com/manual/reference/method/db.collection.find/) for comprehensive examples and a list of supported operations. Note that [MongoDB Projections](https://docs.mongodb.com/manual/reference/method/db.collection.find/#find-projection) are unsupported in version 1.0 of this API.
+        /// <para/>
+        /// Sample request to find all books with a page count greater than 400:
         ///
-        ///     POST /api/1.0/db/collection/find
-        ///     {
-        ///         status:
-        ///         {
-        ///             $in: [ "A", "D" ]
-        ///         },
-        ///         code: 400
+        ///     POST /api/1.0/bookstore/books/find
+        ///     { pages: { $gt: 400 } }
+        ///
+        /// <para/>
+        /// Sample request to find the book with an `_id` value of "5":
+        ///
+        ///     POST /api/1.0/bookstore/books/find
+        ///     { _id: "5" }
+        ///
+        /// <para/>
+        /// Sample request to find the book with an `_id` value of either "5" or ObjectId("507c35dd8fada716c89d0013"):
+        ///
+        ///     POST /api/1.0/bookstore/books/find
+        ///     { _id: { $in: [ "5", ObjectId("507c35dd8fada716c89d0013") ] } }
+        ///
+        /// <para/>
+        /// Sample request to find books with a publish date after January 1st, 1900:
+        ///
+        ///     POST /api/1.0/bookstore/books/find
+        ///     { publishDate: { $gte: new Date('1900-01-01') } }
+        ///
+        /// <para/>
+        /// Sample request to find books that start with either `the` or the letter `a` (case-insensitive).
+        ///
+        ///     POST /api/1.0/bookstore/books/find
+        ///     { title: /^(the|a)/i }
+        ///
+        /// <para/>
+        /// Sample request to find books that start with `the` or `a` (case-insensitive), that have more than 100 pages, and where the author is either John Steinbeck, Stephen Crane, or Miguel De Cervantes.
+        ///
+        ///     POST /api/1.0/bookstore/books/find
+        ///     { 
+        ///         title: /^(the|a)/i,
+        ///         pages: { $gt: 100 },
+        ///         author: { $in: [ "John Steinbeck", "Stephen Crane", "Miguel De Cervantes" ] }
         ///     }
         ///
         /// </remarks>
@@ -454,6 +484,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         ///     POST /api/1.0/bookstore/books/distinct/author
         ///     {}
         ///
+        /// <para/>
         /// Sample reques to get the distinct values for the 'author' field, but only for those books that have a page count greater than or equal to 500:
         /// 
         ///     POST /api/1.0/bookstore/books/distinct/author
@@ -494,7 +525,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// Processes and returns data through an aggregation pipeline
         /// </summary>
         /// <remarks>
-        /// An API for data pipelining via the MongoDB aggregation framework (see https://docs.mongodb.com/manual/aggregation/ for more details). Specify pipeline stages in the order you want them to be executed. All MongoDB pipeline stages are supported.
+        /// An API for complex, ordered data processing operations using the MongoDB Aggregation framework. See [MongoDB Aggregation documentation](https://docs.mongodb.com/manual/aggregation/) for comprehensive examples and a full list of data pipeline operations.
         /// <para/>
         /// Sample request to match all items where the title begins with 'the' or 'a', where the results should be sorted by page count in ascending order, and where the results should be limited to five objects:
         ///
