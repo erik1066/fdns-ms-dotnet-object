@@ -5,11 +5,16 @@
 [![Build Status](https://travis-ci.org/erik1066/fdns-ms-dotnet-object.svg?branch=master)](https://travis-ci.org/erik1066/fdns-ms-dotnet-object)
 [![Docker Pulls](https://img.shields.io/docker/pulls/biohazard501/fdns-ms-dotnet-object.svg)](https://hub.docker.com/r/biohazard501/fdns-ms-dotnet-object/)
 
-Backing services are [factor #4 of the 12-factor app methodology](https://12factor.net/backing-services). Applied to database operations, the result is that a wide variety of languages and platforms can be used to interact with the database. These include languages that don't have a Mongo SDK, like Rust, SAS, and R. Analysts, data scientists, and developers can all learn a simple HTTP REST API to work with the organization's data.
+Backing services are [factor #4 of the 12-factor app methodology](https://12factor.net/backing-services). Applied to database operations, the result is that many languages can be used to interact with a Mongo database, even those languages lacking a Mongo SDK. Analysts, data scientists, and developers can learn a simple HTTP REST API to work with the organization's data using the languages and tools of their choice. The Object service can be used as part of a data lake that can serve an entire organization - or as just one component of a smaller application.
 
-An additional benefit is centralized data access, authentication, and authorization. The Object backing service is secured via OAuth2 using scope-based authorization. Data scientists thus have a known, consistent way of requesting access to and retreiving data for the entire organization. While HTTP APIs for the organization's data can still be implemented without the Object backing service, they will be scattered across many URLs and are unlikely to have consistent APIs.
+When used as part of a data lake, the Object service provides the following benefits:
+- Centralized data access for the whole organization: Everyone just needs to learn one service endpoint
+- A consistent API: Searching, data aggregation, etc. are by-design going to be consistent regardless of the data source
+- A consistent security protocol: All authenticiation and authorization is handled via OAuth2
 
-If the microservice becomes unhealthy or unresponsive, it can be (depending on which container orchestrator is used) automatically killed and restarted with little delay. Being a microservice means extremely efficient use of computing resources, making these kill-restart cycles very quick. This efficiency also means that scaling the backing service to meet spikes in demand can be done fast and seamlessly.
+The alternative to a data lake is allowing engineering teams to build their own APIs for each of their own services and systems. The result is that there will be hundreds of APIs at many different service endpoints with varying REST implementations and authentication schemes. Organizations can still enforce coherent REST standards and authentication protocols via management practices, but there is real effort in carrying out that enforcement, and the level of effort rises as the organization grows in size. A data lake built as a set of backing services eliminates these problems.
+
+The Object service is designed as a microservice so that it can scale rapidly and efficiently when used as part of a data lake.
 
 > This repository represents an unofficial re-implementation of the U.S. Centers for Disease Control and Prevention's [Object microservice](https://github.com/CDCgov/fdns-ms-object) using [ASP.NET Core 2.2](https://docs.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-2.2?view=aspnetcore-2.2) instead of [Java Spring](https://spring.io/).
 
