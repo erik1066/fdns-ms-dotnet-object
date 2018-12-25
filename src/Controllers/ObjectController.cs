@@ -346,9 +346,17 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// Searches for one or more objects that match the specified criteria
         /// </summary>
         /// <remarks>
-        /// Sample request to search for one or more documents with a status of 'A'
+        /// Allows searching the database using a simple Google-like search expression. For example, pages>=400 year&lt;1900 as the query string argument will execute a search for all books with greater than or equal to 400 pages and that were published before the year 1900.
+        /// <para/>
+        /// Notes:
+        /// - Wildcard searches are unsupported in version `1.0` of this API
+        /// - Regular expression searches are unsupported in version `1.0` of this API
+        /// - Text string searches should be enclosed with double quotes. Ex: `title:"The Red Badge of Courage"`
+        /// - All conditions are joined using the"AND" logical operator. Other logical operations are unsupported in version `1.0` of this API
+        /// 
+        /// Sample request to search for one or more books with a page count >= 400 and that was published before 1900:
         ///
-        ///     GET /api/1.0/db/collection/search?qs=status%3AA
+        ///     GET /api/1.0/bookstore/books/search?qs=pages%3E%3D400%20year%3C1900
         ///
         /// </remarks>
         /// <param name="qs">The plain text search expression</param>
