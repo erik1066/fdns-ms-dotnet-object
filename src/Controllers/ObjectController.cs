@@ -74,8 +74,8 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// </summary>
         /// <remarks>
         /// Notes on behavior:
-        /// - An '_id' string property will be added to the Json payload with the value specified in the 'id' route parameter.
-        /// - If the Json payload already has an '_id' property, the value for '_id' will be **overwritten** with the value specified in the 'id' route paramter.
+        /// - An `_id` string property will be added to the Json payload with the value specified in the `id` route parameter.
+        /// - If the Json payload already has an `_id` property, the value for `_id` will be **overwritten** with the value specified in the `id` route paramter.
         /// - If there is already an object in the collection with the specified id, a 400 (bad request) will be returned.
         /// 
         /// Sample request to insert a new Json document with an id of 1:
@@ -122,8 +122,8 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// </summary>
         /// <remarks>
         /// Notes on behavior:
-        /// - If the Json payload has no '_id' property, an '_id' property will be created by MongoDB using OID syntax. Ex: "_id" : { "$oid" : "5c211b79b920cb11da0c9086" }
-        /// - If the Json payload has an '_id' property, that value will not be overwritten; whatever is specified in _id will become the object's identifier in MongoDB
+        /// - If the Json payload has no `_id` property, an `_id` property will be created by MongoDB using OID syntax. Ex: `"_id" : { "$oid" : "5c211b79b920cb11da0c9086" }`
+        /// - If the Json payload has an `_id` property, that value will not be overwritten; whatever is specified in _id will become the object's identifier in MongoDB
         /// 
         /// Sample request to insert a new Json document with an database-generated OID:
         ///
@@ -182,8 +182,8 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// </summary>
         /// <remarks>
         /// Notes on behavior:
-        /// - If the Json payload has no '_id' property, the '_id' value from the object being replaced will be automatically added.
-        /// - If the Json payload has an '_id' property that is different than the argument supplied for the 'id' route parameter, the '_id' value from the object being replaced will overwrite the '_id' value in the Json payload.
+        /// - If the Json payload has no `_id` property, the `_id` value from the object being replaced will be automatically added.
+        /// - If the Json payload has an `_id` property that is different than the argument supplied for the `id` route parameter, the `_id` value from the object being replaced will overwrite the `_id` value in the Json payload.
         /// - If there is no object in the collection with a matching id, a 404 (not found) will be returned.
         /// 
         /// Sample request to replace the object that has an id of 2:
@@ -580,9 +580,13 @@ namespace Foundation.ObjectService.WebUI.Controllers
 
         // POST api/1.0/multi/db/collection
         /// <summary>
-        /// Inserts multiple objects at a time and auto-generates IDs for each object
+        /// Inserts multiple objects
         /// </summary>
         /// <remarks>
+        /// Notes:
+        /// - If a Json object in the array has no `_id` property, an `_id` property will be created by MongoDB using OID syntax. Ex: `"_id" : { "$oid" : "5c211b79b920cb11da0c9086" }`
+        /// - If a Json object in the array has an `_id` property, that value will not be overwritten; whatever is specified in `_id` will become the object's identifier in MongoDB
+        /// 
         /// Sample request to insert 20 books:
         ///
         ///     POST /api/1.0/multi/bookstore/books
