@@ -20,20 +20,20 @@ The Object service is designed as a microservice so that it can scale rapidly an
 
 
 ## Documentation
-[USAGE.md](docs/USAGE.md) explains how to containerize the microservice, debug it, run its unit tests, and contains a quick-start guide for interacting with the microservice once it's running. It also explains how to use OAuth2 scopes to provide course-grained authorization around the microservice's API.
+[README.md](docs/README.md) explains how to containerize the microservice, debug it, run its unit tests, and contains a quick-start guide for interacting with the microservice once it's running. It also explains how to use OAuth2 scopes to provide course-grained authorization around the microservice's API.
 
-- [Running this microservice locally inside a container](docs/USAGE.md#running-this-microservice-locally-inside-a-container)
-- [Debugging using Visual Studio Code](docs/USAGE.md#debugging-using-visual-studio-code)
-- [Debugging unit tests using Visual Studio Code](docs/USAGE.md#debugging-unit-tests-using-visual-studio-code)
-- [Running from the command line without containerization](docs/USAGE.md#running-from-the-command-line-without-containerization)
-- [Readiness and liveness checks](docs/USAGE.md#readiness-and-liveness-checks)
-- [Experimenting with API operations](docs/USAGE.md#experimenting-with-api-operations)
-- [Writing code to interact with this service](docs/USAGE.md#writing-code-to-interact-with-this-service)
-- [Environment variable configuration](docs/USAGE.md#environment-variable-configuration)
-- [Quick-start guide](docs/USAGE.md#quick-start-guide)
-- [Data pipelining](docs/USAGE.md#data-pipelining)
-- [Bulk importing of Json arrays and Csv files](docs/USAGE.md#bulk-importing-of-json-arrays-and-csv-files)
-- [Authorization and Security](docs/USAGE.md#authorization-and-security)
+- [Running this microservice locally inside a container](docs/README.md#running-this-microservice-locally-inside-a-container)
+- [Debugging using Visual Studio Code](docs/README.md#debugging-using-visual-studio-code)
+- [Debugging unit tests using Visual Studio Code](docs/README.md#debugging-unit-tests-using-visual-studio-code)
+- [Running from the command line without containerization](docs/README.md#running-from-the-command-line-without-containerization)
+- [Readiness and liveness checks](docs/README.md#readiness-and-liveness-checks)
+- [Experimenting with API operations](docs/README.md#experimenting-with-api-operations)
+- [Writing code to interact with this service](docs/README.md#writing-code-to-interact-with-this-service)
+- [Environment variable configuration](docs/README.md#environment-variable-configuration)
+- [Quick-start guide](docs/README.md#quick-start-guide)
+- [Data pipelining](docs/README.md#data-pipelining)
+- [Bulk importing of Json arrays and Csv files](docs/README.md#bulk-importing-of-json-arrays-and-csv-files)
+- [Authorization and Security](docs/README.md#authorization-and-security)
 
 ## License
 The repository utilizes code licensed under the terms of the Apache Software License and therefore is licensed under ASL v2 or later.
