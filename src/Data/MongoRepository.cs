@@ -73,7 +73,7 @@ namespace Foundation.ObjectService.Data
                 var collection = GetCollection(database, collectionName);
                 
                 (var isObjectId, ObjectId objectId) = IsObjectId(id.ToString());
-                BsonDocument findDocument = isObjectId == true ? new BsonDocument(ID_PROPERTY_NAME, objectId) : new BsonDocument(ID_PROPERTY_NAME, id.ToString());
+                BsonDocument findDocument = isObjectId ? new BsonDocument(ID_PROPERTY_NAME, objectId) : new BsonDocument(ID_PROPERTY_NAME, id.ToString());
                 return StringifyDocument(await collection.Find(findDocument).FirstOrDefaultAsync());
             }
             catch (Exception ex)
@@ -178,7 +178,7 @@ namespace Foundation.ObjectService.Data
                 var document = BsonDocument.Parse(json);
 
                 (var isObjectId, ObjectId objectId) = IsObjectId(id.ToString());
-                BsonDocument findDocument = isObjectId == true ? new BsonDocument(ID_PROPERTY_NAME, objectId) : new BsonDocument(ID_PROPERTY_NAME, id.ToString());
+                BsonDocument findDocument = isObjectId ? new BsonDocument(ID_PROPERTY_NAME, objectId) : new BsonDocument(ID_PROPERTY_NAME, id.ToString());
                 var replaceOneResult = await collection.ReplaceOneAsync(findDocument, document);
 
                 if (replaceOneResult.IsAcknowledged && replaceOneResult.ModifiedCount == 1)
@@ -227,7 +227,7 @@ namespace Foundation.ObjectService.Data
                 var collection = GetCollection(database, collectionName);
 
                 (var isObjectId, ObjectId objectId) = IsObjectId(id.ToString());
-                BsonDocument findDocument = isObjectId == true ? new BsonDocument(ID_PROPERTY_NAME, objectId) : new BsonDocument(ID_PROPERTY_NAME, id.ToString());
+                BsonDocument findDocument = isObjectId ? new BsonDocument(ID_PROPERTY_NAME, objectId) : new BsonDocument(ID_PROPERTY_NAME, id.ToString());
                 var deleteOneResult = await collection.DeleteOneAsync(findDocument);
 
                 if (deleteOneResult.IsAcknowledged && deleteOneResult.DeletedCount == 1)
@@ -539,27 +539,6 @@ namespace Foundation.ObjectService.Data
             var collectionCursor = await database.ListCollectionsAsync(new ListCollectionsOptions {Filter = filter});
             var exists = await collectionCursor.AnyAsync();
             return exists;
-        }
-
-        /// <summary>
-        /// Forces an ID property into a JSON object
-        /// </summary>
-        /// <param name="id">The ID value to force into the object's 'id' property</param>
-        /// <param name="json">The Json that should contain the ID key and value</param>
-        /// <returns>The Json object with an 'id' property and the specified id value</returns>
-        private string ForceAddIdToJsonObject(object id, string json)
-        {
-            var values = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
-            if (values.ContainsKey(ID_PROPERTY_NAME))
-            {
-                values[ID_PROPERTY_NAME] = id;
-            }
-            else
-            {
-                values.Add(ID_PROPERTY_NAME, id);
-            }
-            string checkedJson = Newtonsoft.Json.JsonConvert.SerializeObject(values, Formatting.Indented);
-            return checkedJson;
         }
 
         private IMongoDatabase GetDatabase(string databaseName)
