@@ -26,6 +26,9 @@ namespace Foundation.ObjectService
         public const string INSERT_AUTHORIZATION_NAME = "insert";
         public const string UPDATE_AUTHORIZATION_NAME = "update";
         public const string DELETE_AUTHORIZATION_NAME = "delete";
+        public const string HEALTH_LIVENESS_ENDPOINT = "/health/live";
+        public const string HEALTH_READINESS_ENDPOINT = "/health/ready";
+        public const string SWAGGER_FILE = "/swagger/v1/swagger.json";
 
         /// <summary>
         /// Gets a config value for a variable name, preferring ENV variables over appsettings variables when both are present

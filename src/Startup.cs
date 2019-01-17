@@ -187,16 +187,16 @@ namespace Foundation.ObjectService.WebUI
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "FDNS Object Microservice API V1");
+                c.SwaggerEndpoint(Common.SWAGGER_FILE, "FDNS Object Microservice API V1");
             });
 
-            app.UseHealthChecks("/health/live", new HealthCheckOptions
+            app.UseHealthChecks(Common.HEALTH_LIVENESS_ENDPOINT, new HealthCheckOptions
             {
                 // Exclude all checks, just return a 200.
                 Predicate = (check) => false
             });
 
-            app.UseHealthChecks("/health/ready", new HealthCheckOptions
+            app.UseHealthChecks(Common.HEALTH_READINESS_ENDPOINT, new HealthCheckOptions
             {
                 Predicate = (check) => check.Tags.Contains("ready"),
                 ResponseWriter = WriteResponse
