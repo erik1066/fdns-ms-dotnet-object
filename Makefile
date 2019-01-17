@@ -43,3 +43,20 @@ docker-stop:
 docker-restart:
 	make docker-stop 2>/dev/null || true
 	make docker-start
+
+sonar:
+	docker pull sonarqube
+	docker run -d --name sonarqube -p 9000:9000 -p 9092:9092 sonarqube || true
+	printf 'Wait for sonarqube\n'
+	until `curl --output /dev/null --silent --head --fail --connect-timeout 80 http://localhost:9000/api/server/version`; do printf '.'; sleep 1; done
+	sleep 5
+	docker-compose up -d
+	dotnet tool install --global dotnet-sonarscanner || true
+	dotnet sonarscanner begin /k:"fdns-ms-dotnet-object" || true
+	dotnet test --collect:"Code Coverage"
+	dotnet sonarscanner end || true
+	docker-compose down
+
+sonar-stop:
+	docker kill sonarqube || true
+	docker rm sonarqube || true
