@@ -78,16 +78,16 @@ namespace Foundation.ObjectService.WebUI
 
             var t = Task.Factory.StartNew( async () =>
             {
-                var checkResult = HealthCheckResult.Unhealthy();
+                HealthCheckResult checkResult;
 
                 try 
                 {
                     var sw = new Stopwatch();
                     sw.Start();
 
-                    var deleteResult = await _repository.DeleteAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1);
-                    var insertResult = await _repository.InsertAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1, "{ 'name' : 'the nameless ones' }");
-                    var getResult = await _repository.GetAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1);
+                    await _repository.DeleteAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1);
+                    await _repository.InsertAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1, "{ 'name' : 'the nameless ones' }");
+                    await _repository.GetAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1);
 
                     sw.Stop();
                     var elapsed = sw.Elapsed.TotalMilliseconds.ToString("N0");
