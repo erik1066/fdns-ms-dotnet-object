@@ -71,6 +71,17 @@ To run tests from the command line:
 1. `cd` to the `fdns-ms-dotnet-object/tests` folder
 1. Execute `dotnet test`
 
+## Analyzing code for quality and vulnerabilities
+
+This project supports SonarQube:
+
+1. Open a terminal window
+1. `cd` to the `fdns-ms-dotnet-object` folder
+1. Execute `make sonar`
+1. Wait until the command finishes
+1. Open a web browser and point to http://localhost:9000/dashboard?id=fdns-ms-dotnet-object
+1. Execute `make sonar-stop` in the terminal window when finished viewing the analysis
+
 ## Readiness and liveness checks
 
 A liveness check is available at `/health/live`. The liveness check returns a 200 OK if the service is running.
