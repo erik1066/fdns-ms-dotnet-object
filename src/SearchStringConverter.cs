@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 namespace Foundation.ObjectService
 {
 #pragma warning disable 1591 // disables the warnings about missing Xml code comments    
-    public class SearchStringConverter // converted to C# from https://github.com/CDCgov/fdns-ms-object/blob/master/src/main/java/gov/cdc/foundation/helper/QueryHelper.java
+    public static class SearchStringConverter // converted to C# from https://github.com/CDCgov/fdns-ms-object/blob/master/src/main/java/gov/cdc/foundation/helper/QueryHelper.java
     {
         // check if a number
         private static bool IsNumber(string str) => System.Text.RegularExpressions.Regex.Match(str, "-?\\d+(\\.\\d+)?").Success;
@@ -16,9 +16,6 @@ namespace Foundation.ObjectService
 
         // build a comparison
         private static JObject BuildComparison(string op, object value) => new JObject( new JProperty("$" + op, value) );
-
-        // get the names of a JObject
-        private static IList<string> GetNames(JObject source) => source.Count == 0 ? new List<string>() : source.Properties().Select(p => p.Name).ToList();
 
         // merge two JObjects
 	    private static JObject MergeObjects(JToken source, JObject target)
@@ -78,15 +75,6 @@ namespace Foundation.ObjectService
                     {
                         shouldJoin = false;
                         var piece = qs.Substring(startIndex, i - startIndex);
-
-                        var replacedIndexes = new List<int>(8);
-                        for (int j = 0; i < piece.Length; j++)
-                        {
-                            if (piece[j] == ' ')
-                            {
-                                replacedIndexes.Add(j);
-                            }
-                        }
                         var formattedPiece = piece.Replace(" ", "_");
                         qs = qs.Replace(piece, formattedPiece);
                         (int Position, string Original, string Replaced) tokenInfo = (itemCount, piece, formattedPiece);
@@ -98,7 +86,7 @@ namespace Foundation.ObjectService
                         startIndex = i;
                     }
                 }
-                else if (character == ' ' && shouldJoin == false)
+                else if (character == ' ' && !shouldJoin)
                 {
                     itemCount++;
                 }
@@ -119,6 +107,20 @@ namespace Foundation.ObjectService
             }
 
             return terms;
+        }
+
+        public static void BuildQueryNotEqualTo(JObject json, string term)
+        {
+            (string fieldName, string rawValue) = Split(term, "!:");
+            if (IsNumber(rawValue))
+            {
+                AddNumberComparisonProperty(json, fieldName, rawValue, "ne");
+            }
+            else
+            {
+                string formattedRawValue = rawValue.Trim('"');
+                json.Add(fieldName, new JObject(BuildAndMergeComparison("ne", fieldName, formattedRawValue, json)));
+            }
         }
 
         // build the query for MongoDB
@@ -157,16 +159,7 @@ namespace Foundation.ObjectService
                 }
                 else if (term.Contains("!:")) 
                 {
-                    (string fieldName, string rawValue) = Split(term, "!:");
-                    if (IsNumber(rawValue))
-                    {
-                        AddNumberComparisonProperty(json, fieldName, rawValue, "ne");
-                    }
-                    else
-                    {
-                        string formattedRawValue = rawValue.Trim('"');
-                        json.Add(fieldName, new JObject(BuildAndMergeComparison("ne", fieldName, formattedRawValue, json)));
-                    }
+                    BuildQueryNotEqualTo(json, term);
                 }
                 else if (term.Contains(":")) 
                 {

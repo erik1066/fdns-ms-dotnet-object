@@ -111,7 +111,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
 
             if (responseFormat == ResponseFormat.OnlyId)
             {
-                document = document = GetInsertedJsonResult(new string [] { routeParameters.Id }).ToString();
+                document = GetInsertedJsonResult(new string [] { routeParameters.Id }).ToString();
             }
             return CreatedAtAction(nameof(GetObject), new { id = routeParameters.Id, db = routeParameters.DatabaseName, collection = routeParameters.CollectionName }, document);
         }
@@ -664,8 +664,6 @@ namespace Foundation.ObjectService.WebUI.Controllers
             
             if (csv.Length > 0)
             {
-                var result = string.Empty;
-
                 using (var reader = new System.IO.StreamReader(csv.OpenReadStream()))
                 {
                     using (var csvReader = new ChoCSVReader(reader)
@@ -701,11 +699,10 @@ namespace Foundation.ObjectService.WebUI.Controllers
 
         private string GetObjectId(string document)
         {
-            string id = string.Empty;            
             JObject json = JObject.Parse(document);
 
             var tokens = json.SelectTokens(@"_id.$oid");
-            if (tokens.Count() == 0)
+            if (!tokens.Any())
             {
                 return json["_id"].ToString();
             }

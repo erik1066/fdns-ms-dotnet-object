@@ -14,7 +14,7 @@ using Serilog.Sinks.Fluentd;
 namespace Foundation.ObjectService.WebUI
 {
 #pragma warning disable 1591 // disables the warnings about missing Xml code comments
-    public class Program
+    public static class Program
     {
         public static IConfiguration Configuration { get; } = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
