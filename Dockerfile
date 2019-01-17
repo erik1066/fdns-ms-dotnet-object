@@ -1,5 +1,5 @@
 # Build stage
-FROM microsoft/dotnet:2.2.102-sdk-alpine3.8 as build
+FROM microsoft/dotnet:2.2.103-sdk-alpine3.8 as build
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT true
 
