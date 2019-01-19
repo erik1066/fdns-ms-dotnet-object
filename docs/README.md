@@ -5,6 +5,7 @@
 - [Debugging using Visual Studio Code](#debugging-using-visual-studio-code)
 - [Debugging unit tests using Visual Studio Code](#debugging-unit-tests-using-visual-studio-code)
 - [Running from the command line without containerization](#running-from-the-command-line-without-containerization)
+- [Analyzing code for quality and vulnerabilities](#analyzing-code-for-quality-and-vulnerabilities)
 - [Readiness and liveness checks](#readiness-and-liveness-checks)
 - [Experimenting with API operations](#experimenting-with-api-operations)
 - [Writing code to interact with this service](#writing-code-to-interact-with-this-service)
@@ -73,14 +74,15 @@ To run tests from the command line:
 
 ## Analyzing code for quality and vulnerabilities
 
-This project supports SonarQube:
+Developers can easily run [SonarQube](https://www.sonarqube.org/) on `fdns-ms-dotnet-object` for code quality and security vulnerability analysis:
 
 1. Open a terminal window
 1. `cd` to the `fdns-ms-dotnet-object` folder
-1. Execute `make sonar`
-1. Wait until the command finishes
+1. `make sonar-up`
+1. `make sonar-run`
+1. Wait until the analysis is finished
 1. Open a web browser and point to http://localhost:9000/dashboard?id=fdns-ms-dotnet-object
-1. Execute `make sonar-stop` in the terminal window when finished viewing the analysis
+1. `make sonar-down`
 
 ## Readiness and liveness checks
 

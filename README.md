@@ -26,6 +26,7 @@ The Object service is designed as a microservice so that it can scale rapidly an
 - [Debugging using Visual Studio Code](docs/README.md#debugging-using-visual-studio-code)
 - [Debugging unit tests using Visual Studio Code](docs/README.md#debugging-unit-tests-using-visual-studio-code)
 - [Running from the command line without containerization](docs/README.md#running-from-the-command-line-without-containerization)
+- [Analyzing code for quality and vulnerabilities](docs/README.md#analyzing-code-for-quality-and-vulnerabilities)
 - [Readiness and liveness checks](docs/README.md#readiness-and-liveness-checks)
 - [Experimenting with API operations](docs/README.md#experimenting-with-api-operations)
 - [Writing code to interact with this service](docs/README.md#writing-code-to-interact-with-this-service)
