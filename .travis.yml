@@ -4,5 +4,5 @@ services:
   - docker
 
 script:
-  - make docker-test
+  - make docker-unit-test
   - make docker-build
