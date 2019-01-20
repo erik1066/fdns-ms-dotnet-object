@@ -1,0 +1,19 @@
+version: '2.2'
+services:
+  mongo:
+    image: mongo:3.4.18
+    ports:
+      - "27017:27017"
+  fdns-ms-dotnet-object:
+    cpus: 1
+    cpu_count: 1
+    cpu_percent: 95
+    mem_limit: 64000000
+    memswap_limit: 64000000
+    image: fdns-ms-dotnet-object
+    ports:
+      - "9090:9090"
+    depends_on:
+      - mongo
+    environment:
+      OBJECT_PORT: 9090
