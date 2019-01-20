@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -25,6 +27,8 @@ using Swashbuckle.AspNetCore.Swagger;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using MongoDB.Driver;
+using Polly;
+using Polly.Extensions.Http;
 using Foundation.ObjectService.Data;
 using Foundation.ObjectService.Security;
 
@@ -44,7 +48,7 @@ namespace Foundation.ObjectService.WebUI
         public void ConfigureServices(IServiceCollection services)
         {
             string authorizationDomain = Common.GetConfigurationVariable(Configuration, "OAUTH2_AUTH_DOMAIN", "Auth:Domain", string.Empty);
-            string introspectionUri = Common.GetConfigurationVariable(Configuration, "OAUTH2_ACCESS_TOKEN_URI", "Auth:IntrospectUri", string.Empty);
+            string introspectionUri = Common.GetConfigurationVariable(Configuration, "OAUTH2_ACCESS_TOKEN_URI", "Auth:IntrospectUrl", string.Empty);
             
             var tokenType = TokenType.None;
 
@@ -134,13 +138,6 @@ namespace Foundation.ObjectService.WebUI
             services.AddSingleton<IMongoClient>(provider => new MongoClient(settings));
             services.AddSingleton<IObjectRepository>(provider => new MongoRepository(provider.GetService<IMongoClient>(), provider.GetService<ILogger<MongoRepository>>(), GetImmutableCollections()));
 
-            var authBuilder = services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-
-            });
-
             services.AddHealthChecks()
                 .AddCheck<IHealthCheck>("database", null, new List<string> { "ready", "mongo", "db" });
 
@@ -160,8 +157,12 @@ namespace Foundation.ObjectService.WebUI
 
             if (tokenType == TokenType.Jwt)
             {
-                // If we're using JWT bearer tokens, let's validate the token's signature - no introspection needed
-                authBuilder.AddJwtBearer(options =>
+                services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(options =>
                 {
                     options.Authority = authorizationDomain;
                     options.Audience = Common.GetConfigurationVariable(Configuration, "OAUTH2_CLIENT_ID", "Auth:ApiIdentifier", string.Empty);
@@ -171,8 +172,28 @@ namespace Foundation.ObjectService.WebUI
             }
             else if (tokenType == TokenType.Bearer)
             {
+                #region Create an HTTP client with configurable resiliency patterns for token introspection
+                services.AddHttpClient($"OBJECT-INTROSPECTION", client =>
+                {
+                })
+                .AddTransientHttpErrorPolicy(builder => builder.WaitAndRetryAsync(new[]
+                {
+                    TimeSpan.FromMilliseconds(20),
+                    TimeSpan.FromMilliseconds(80),
+                    TimeSpan.FromMilliseconds(240),
+                }))
+                .AddPolicyHandler(GetCircuitBreakerPolicy()); // sets a circuit breaker so that after several failed requests, we just stop sending those requests
+                #endregion
+
+                services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = "FDNS Token Scheme";
+                    options.DefaultChallengeScheme = "FDNS Token Scheme";
+                })
+                .AddTokenAuth(o => { });
+
                 // If we're using bearer tokens, let's use introspection to validate the tokens and their scopes
-                services.AddSingleton<IAuthorizationHandler>(provider => new TokenHasScopeHandler(introspectionUri));
+                services.AddSingleton<IAuthorizationHandler>(provider => new TokenHasScopeHandler(introspectionUri, provider.GetService<IHttpClientFactory>()));
             }
             else
             {
@@ -275,6 +296,13 @@ namespace Foundation.ObjectService.WebUI
                 }
             }
             return immutableCollection;
+        }
+
+        private static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
+        {
+            return HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .CircuitBreakerAsync(5, TimeSpan.FromSeconds(5));
         }
     }
 #pragma warning restore 1591

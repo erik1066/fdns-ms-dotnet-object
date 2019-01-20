@@ -112,15 +112,14 @@ If an SDK is unavailable for your language or cannot meet a specific need, then 
 * `OBJECT_FLUENTD_HOST`: The [Fluentd](https://www.fluentd.org/) hostname
 * `OBJECT_FLUENTD_PORT`: The [Fluentd](https://www.fluentd.org/) port number
 * `OBJECT_PROXY_HOSTNAME`: The hostname of your environment for use with Swagger UI, ex: `api.my.org`
-* `OBJECT_IMMUTABLE`: This is a `;` separated list of database/collection names which are immutable collections. Ex: `bookstore/customer;coffeeshop/order`
+* `OBJECT_IMMUTABLE`: This is a `;` separated list of database/collection names which represent immutable collections. The Object microservice will be prohibited from modifying them regardless of the user's access rights. Ex: `bookstore/customer;coffeeshop/order`
 
 The following environment variables can be used to configure this microservice to use your OAuth2 provider:
 
-* `OAUTH2_ACCESS_TOKEN_URI`: This is the introspection URL of your provider, ex: `https://hydra:4444/oauth2/introspect`
-* `OAUTH2_PROTECTED_URIS`: This is a path for which routes are to be restricted, ex: `/api/1.0/**`
-* `OAUTH2_CLIENT_ID`: This is your OAuth 2 client id with the provider
-* `OAUTH2_CLIENT_SECRET`: This is your OAuth 2 client secret with the provider
-* `SSL_VERIFYING_DISABLE`: This is an option to disable SSL verification, you can disable this when testing locally but this should be set to `false` for all production systems
+* `OAUTH2_ACCESS_TOKEN_URI`: This is the introspection URL of your provider, ex: `https://hydra:4445/oauth2/introspect`
+* `OAUTH2_AUTH_DOMAIN`: This is the authorization domain of your JWT provider, ex: `https://yourapp.auth0.com/`
+* `OAUTH2_CLIENT_ID`: This is your OAuth2 client id with the provider
+* `OAUTH2_CLIENT_SECRET`: This is your OAuth2 client secret with the provider
 
 For more information on using OAuth2 with this microservice, see **Authorization and security** at the end of this document.
 
@@ -371,25 +370,61 @@ The service will return the number of inserted objects and the Ids of those obje
 
 ## Authorization and Security
 
-This microservice is configurable so that it can be secured via an OAuth2 provider. Each route on the microservice is mapped to a scope. Since the database and collection names are part of the route, and since an OAuth2 token is only valid for the scopes associated with that token, then using OAuth2 and scopes are an effective way to control data access. Consider if a client application called `bookstore` has the following scopes:
+Since the Object microservice is acting as a RESTful HTTP wrapper for MongoDB, we must use an HTTP security protocol - and not MongoDB connection strings - when authorizing clients of the microservice. This is where OAuth2 steps in. We assume the reader has basic familiarity with OAuth2 for the remainder of this section.
+
+Authorization to databases, collections, and read/insert/update/delete operations on those collections are all handled using _OAuth2 scopes_. Each HTTP route on the microservice has a _required scope attribute_. For an API call on any given HTTP route to succeed, the OAuth2 authorization token (passed to the Object microservice as an HTTP header) must be associated with that route's required scope.
+
+What's a "required scope attribute" for this microservice? It's a combination of:
+
+1. The name of the system to which the microservice belongs
+1. The name of the microservice
+1. The Mongo database name
+1. The collection name within the Mongo database
+1. Whether the operation is read, insert, update, or delete
+
+A required scope attribute might therefore look like this:
 
 ```
 fdns.object.bookstore.customers.read
-fdns.object.bookstore.customers.insert
-fdns.object.bookstore.customers.update
-fdns.object.bookstore.books.read
-fdns.object.bookstore.books.insert
-fdns.object.bookstore.books.update
-fdns.object.bookstore.orders.read
-fdns.object.bookstore.orders.insert
 ```
 
-The `bookstore` client application can access `GET api/1.0/bookstore/customers/1` because that route is mapped to one of the above scopes. If the `bookstore` client application instead tried to access `GET api/1.0/coffeshop/orders/15`, they would be denied becase that route is not part of the scope associated with `bookstore`'s access token. CRUD operations can also be controlled at this level such that `PUT api/1.0/coffeshop/orders/8` would be denied, as this corresponds to an UPDATE operation and the above scopes do not include UPDATE rights on the `bookstore/orders` route. Each software application that uses Object can (and should!) be given a different set of scopes to ensure no other applications can access their data.
+Parts 1 and 2 of the required scope ("fdns" and "object", respectively) are hard-coded into the Object microservice and do not change.
 
-Using scopes in this manner allows the Object microservice to store data for many different applications without presenting authorization risks across those boundaries. Note that OAuth2 also allows a "resource-owner" consent flow for individual users. This mechanism could be used to grant read-only access to a specific data collection for data scientists and analysts, who could then access the data directory via the API in their preferred statistical tool, e.g. SAS.
+Parts 3 and 4 ("bookstore" and "customers", respectively) are dynamically determined on each API call based on the route parameters of the call. 
 
-An OAuth2-based authorization model with per-application scopes that map to routes and HTTP verbs is part of how the Object microservice can be used across the enterprise as part of an enterprise-grade "data lake."
+Part 5 is determined by a read/insert/update/delete authorization filter that is associated with each API call.
 
-Note that additional Foundation Services provide OAuth2 integration with LDAP and ActiveDirectory.
+Let's walk through an example. Assume we want to insert a new order record. To insert an order record, we need to `POST` a Json document to `api/1.0/coffeshop/orders` and we need to send an OAuth2 authorization token as part of the HTTP header. The Object microservice will determine (as part of its processing of our request) that to carry out a `POST` on `api/1.0/coffeshop/orders`, we must have the following scope: `fdns.object.coffeshop.orders.insert`. 
 
-__Scopes__: This application uses the following scope: `fdns.object.*`
+The Object microservice will read our authorization token from our HTTP request header and send it to the OAuth2 provider. The OAuth2 provider will respond to the Object microservice with a list of scopes associated for that token. If one of the scopes in the response is `fdns.object.coffeshop.orders.insert`, then our request to insert a new customer object succeeds. Otherwise the request fails with an HTTP 401.
+
+Using scopes in this manner allows the Object microservice to be an endpoint for hundreds of databases and IT systems across an organization. 
+
+### Configuring the service with an OAuth2 provider
+
+The FDNS Object microservice can be configured to one of three authorization modes:
+
+1. No authorization
+1. JavaScript Web Tokens (also known as JWTs)
+1. Bearer Tokens
+
+#### No authorization
+Simply leave all the OAUTH environment variables empty to start the service in this mode.
+
+#### JavaScript Web Tokens (JWTs)
+Set the `OAUTH2_AUTH_DOMAIN` environment variable. Example:
+
+```
+OAUTH2_AUTH_DOMAIN=https://example.auth0.com/
+```
+
+JWTs are not introspected; the Object microservice will only validate the JWT's signature. The JWT itself contains the list of scopes the token is associated with.
+
+#### Bearer Tokens
+Set the `OAUTH2_ACCESS_TOKEN_URI` environment variable to the introspection endpoint of your OAuth2 provider. Example:
+
+```
+OAUTH2_ACCESS_TOKEN_URI=http://localhost:4445/oauth2/introspect
+```
+
+Bearer tokens don't contain the scopes associated with the token. The microservice will call the introspection endpoint on each HTTP request. The introspection response will contain the scopes associated with the token.

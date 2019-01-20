@@ -46,16 +46,18 @@ namespace Foundation.ObjectService.WebUI
             else if (exception is ImmutableCollectionException)    code = HttpStatusCode.BadRequest;
             else if (exception is BsonSerializationException)      code = HttpStatusCode.BadRequest;
 
+            var numericCode = (int)code;
+
             var result = JsonConvert.SerializeObject(new ProblemDetails() 
             {
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
                 Title = "Bad Request",
-                Status = 400,
+                Status = numericCode,
                 Detail = exception.Message
             });
 
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)code;
+            context.Response.StatusCode = numericCode;
             return context.Response.WriteAsync(result);
         }
     }
