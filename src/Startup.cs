@@ -43,8 +43,19 @@ namespace Foundation.ObjectService.WebUI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            string authorizationDomain = Common.GetConfigurationVariable(Configuration, "OAUTH2_ACCESS_TOKEN_URI", "Auth:Domain", string.Empty);
-            bool useAuthorization = !string.IsNullOrEmpty(authorizationDomain);
+            string authorizationDomain = Common.GetConfigurationVariable(Configuration, "OAUTH2_AUTH_DOMAIN", "Auth:Domain", string.Empty);
+            string introspectionUri = Common.GetConfigurationVariable(Configuration, "OAUTH2_ACCESS_TOKEN_URI", "Auth:IntrospectUri", string.Empty);
+            
+            var tokenType = TokenType.None;
+
+            if (!string.IsNullOrEmpty(introspectionUri))
+            {
+                tokenType = TokenType.Bearer;
+            }
+            else if (!string.IsNullOrEmpty(authorizationDomain))
+            {
+                tokenType = TokenType.Jwt;
+            }
             
             services.AddSwaggerGen(c =>
             {
@@ -68,9 +79,16 @@ namespace Foundation.ObjectService.WebUI
                     }
                 );
 
-                if (useAuthorization)
+                if (tokenType != TokenType.None)
                 {
-                    c.AddSecurityDefinition("Bearer", new ApiKeyScheme { In = "header", Description = "Please enter JWT with Bearer into field", Name = "Authorization", Type = "apiKey" });
+                    c.AddSecurityDefinition("Bearer", new ApiKeyScheme 
+                    { 
+                        In = "header", 
+                        Description = "Please enter Token into field", 
+                        Name = "Authorization", 
+                        Type = "apiKey" 
+                    });
+
                     c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>> {
                         { "Bearer", Enumerable.Empty<string>() },
                     });
@@ -116,15 +134,11 @@ namespace Foundation.ObjectService.WebUI
             services.AddSingleton<IMongoClient>(provider => new MongoClient(settings));
             services.AddSingleton<IObjectRepository>(provider => new MongoRepository(provider.GetService<IMongoClient>(), provider.GetService<ILogger<MongoRepository>>(), GetImmutableCollections()));
 
-            services.AddAuthentication(options =>
+            var authBuilder = services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 
-            }).AddJwtBearer(options =>
-            {
-                options.Authority = authorizationDomain;
-                options.Audience = Common.GetConfigurationVariable(Configuration, "OAUTH2_CLIENT_ID", "Auth:ApiIdentifier", string.Empty);
             });
 
             services.AddHealthChecks()
@@ -144,13 +158,25 @@ namespace Foundation.ObjectService.WebUI
                 options.AddPolicy(Common.DELETE_AUTHORIZATION_NAME, policy => policy.Requirements.Add(new HasScopeRequirement(Common.DELETE_AUTHORIZATION_NAME, authorizationDomain)));
             });
 
-            // If the developer has not configured OAuth2, then disable authentication and authorization
-            if (useAuthorization)
+            if (tokenType == TokenType.Jwt)
             {
-                services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
+                // If we're using JWT bearer tokens, let's validate the token's signature - no introspection needed
+                authBuilder.AddJwtBearer(options =>
+                {
+                    options.Authority = authorizationDomain;
+                    options.Audience = Common.GetConfigurationVariable(Configuration, "OAUTH2_CLIENT_ID", "Auth:ApiIdentifier", string.Empty);
+                });
+
+                services.AddSingleton<IAuthorizationHandler, JwtHasScopeHandler>();
+            }
+            else if (tokenType == TokenType.Bearer)
+            {
+                // If we're using bearer tokens, let's use introspection to validate the tokens and their scopes
+                services.AddSingleton<IAuthorizationHandler>(provider => new TokenHasScopeHandler(introspectionUri));
             }
             else
             {
+                // If the developer has not configured OAuth2, then disable authentication and authorization
                 services.AddSingleton<IAuthorizationHandler, AlwaysAllowHandler>();
             }
         }

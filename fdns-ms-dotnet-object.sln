@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Foundation.ObjectService.WebUI", "src\Foundation.ObjectService.WebUI.csproj", "{DCAFBD86-0C6A-41F7-9436-CE028747E541}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Foundation.ObjectService.WebUI.Tests", "tests\Foundation.ObjectService.WebUI.Tests.csproj", "{61D67BC3-3796-4CCA-9E58-5988F761A570}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Foundation.ObjectService.WebUI.Tests", "tests\unit\Foundation.ObjectService.WebUI.Tests.csproj", "{61D67BC3-3796-4CCA-9E58-5988F761A570}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

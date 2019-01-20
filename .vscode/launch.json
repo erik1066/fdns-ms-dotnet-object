@@ -5,7 +5,7 @@
    "version": "0.2.0",
    "configurations": [
         {
-            "name": ".NET Core Launch (web)",
+            "name": "Local MongoDB",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -35,7 +35,8 @@
                 "OBJECT_MONGO_USE_SSL": "false",
                 "OBJECT_FLUENTD_HOST": "localhost",
                 "OBJECT_FLUENTD_PORT": "24224",
-                "OBJECT_IMMUTABLE": "abcd/def"
+                "OBJECT_IMMUTABLE": "abcd/def",
+                "OAUTH2_ACCESS_TOKEN_URI": ""
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"

@@ -4,7 +4,7 @@ FROM microsoft/dotnet:2.2.103-sdk-stretch as test
 ENV DOTNET_CLI_TELEMETRY_OPTOUT true
 
 COPY src /src
-COPY tests /tests
-WORKDIR /tests
+COPY tests/unit /tests/unit
+WORKDIR /tests/unit
 
 RUN dotnet test
