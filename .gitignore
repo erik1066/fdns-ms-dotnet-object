@@ -30,7 +30,7 @@ _ReSharper.*
 .DS_Store
 
 # test files
-tests/security/resources/token
+tests/security/resources/
 
 # Sonarqube
 .sonarqube
