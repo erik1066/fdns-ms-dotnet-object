@@ -15,7 +15,7 @@ namespace Foundation.ObjectService.Security
     /// </summary>
     public sealed class TokenHasScopeHandler : ScopeHandler
     {
-        private readonly string _introspectionUri = string.Empty;
+        private readonly string _introspectionUri;
         private readonly HttpClient _client = null;
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Foundation.ObjectService.Security
             var resource = (context.Resource as Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext);
             if (resource == null || !resource.RouteData.Values.Keys.Contains("db") || !resource.RouteData.Values.Keys.Contains("collection"))
             {
-                return;// Task.CompletedTask;
+                return;
             }
 
             /* We need to get the dot-separated path to the collection, such as fdns.object.bookstore.customer. This dot-separated
@@ -74,30 +74,27 @@ namespace Foundation.ObjectService.Security
             if (!introspectionResponse.Active || !introspectionResponse.Exp.HasValue)
             {
                 context.Fail();
-                return; //return Task.CompletedTask;
+                return;
             }
-            else
+
+            DateTimeOffset expirationTimeOffset = DateTimeOffset.FromUnixTimeSeconds(introspectionResponse.Exp.Value);
+            DateTime expirationTime = expirationTimeOffset.UtcDateTime;
+            DateTime now = DateTime.Now;
+
+            if (now > expirationTime)
             {
-                DateTimeOffset expirationTimeOffset = DateTimeOffset.FromUnixTimeSeconds(introspectionResponse.Exp.Value);
-                DateTime expirationTime = expirationTimeOffset.UtcDateTime;
-                DateTime now = DateTime.Now;
-
-                if (now > expirationTime)
-                {
-                    // fail due to expiration
-                    context.Fail();
-                    return; //return Task.CompletedTask;
-                }
-
-                if (HasScope(requiredScope, introspectionResponse.Scopes))
-                {
-                    context.Succeed(requirement);
-                    return; //return Task.CompletedTask;
-                }
-
+                // fail due to expiration
                 context.Fail();
-                return; //return Task.CompletedTask;
+                return;
             }
+
+            if (HasScope(requiredScope, introspectionResponse.Scopes))
+            {
+                context.Succeed(requirement);
+                return;
+            }
+
+            context.Fail();
         }
     }
 }
