@@ -39,7 +39,7 @@ docker-restart:
 # *************************
 
 # Unit tests
-docker-unit-test:
+run-unit-tests:
 	docker build \
 		-t fdns-ms-dotnet-object-tests \
 		-f tests/unit/Dockerfile.test \
@@ -48,17 +48,27 @@ docker-unit-test:
 		.
 	docker rmi fdns-ms-dotnet-object-tests
 
+# Integration tests
+run-integration-tests:
+	docker-compose --file tests/integration/docker-compose.yml up --detach
+	sleep 7
+	dotnet clean
+	dotnet test tests/integration/Foundation.ObjectService.IntegrationTests.csproj || true
+	docker-compose --file tests/integration/docker-compose.yml down
+
 # Performance tests
-docker-performance-test:
+run-performance-tests:
 	docker-compose --file tests/performance/docker-compose.yml up --detach
 	printf 'Wait for Object service\n'
 	until `curl --output /dev/null --silent --fail --connect-timeout 80 http://localhost:9090/health/ready`; do printf '.'; sleep 1; done
 	sleep 1
-	ab -p tests/performance/resources/001.json -T application/json -c 4 -n 1000 http://localhost:9090/api/1.0/bookstore/books
+	printf '\n'
+	ab -p tests/performance/resources/001.json -T application/json -c 2 -n 1000 http://localhost:9090/api/1.0/bookstore/books
+	printf '\n'
 	docker-compose --file tests/performance/docker-compose.yml down
 
 # Security tests
-docker-security-test:
+run-security-tests:
 	docker-compose --file tests/security/docker-compose.yml up --detach
 	printf 'Wait for Hydra\n'
 	until `curl --output /dev/null --silent --fail --connect-timeout 80 http://localhost:4445/health/ready`; do printf '.'; sleep 1; done
