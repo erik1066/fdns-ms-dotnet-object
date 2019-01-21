@@ -1,4 +1,4 @@
-version: '2.2.101'
+version: '2.2.103'
 image: Visual Studio 2017
 branches:
   only:
@@ -19,8 +19,8 @@ build_script:
 clone_depth: 1
 test_script:
   # restore packages for our unit tests
-  - cmd: dotnet restore ./tests/Foundation.ObjectService.WebUI.Tests.csproj --verbosity m
+  - cmd: dotnet restore ./tests/unit/Foundation.ObjectService.WebUI.Tests.csproj --verbosity m
   # run the unit tests (requires changing into the test directory)
-  - cmd: cd tests
+  - cmd: cd tests/unit
   - cmd: dotnet test
 deploy: off
