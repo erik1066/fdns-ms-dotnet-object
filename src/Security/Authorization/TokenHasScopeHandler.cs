@@ -25,7 +25,7 @@ namespace Foundation.ObjectService.Security
         /// <param name="httpClientFactory">HttpClient factory to use for the introspection request</param>
         public TokenHasScopeHandler(string introspectionUri, IHttpClientFactory httpClientFactory)
         {
-            _client = httpClientFactory.CreateClient($"OBJECT-INTROSPECTION");
+            _client = httpClientFactory.CreateClient($"oauth2-provider");
             _introspectionUri = introspectionUri;
         }
 

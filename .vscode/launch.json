@@ -36,7 +36,8 @@
                 "OBJECT_FLUENTD_HOST": "localhost",
                 "OBJECT_FLUENTD_PORT": "24224",
                 "OBJECT_IMMUTABLE": "abcd/def",
-                "OAUTH2_ACCESS_TOKEN_URI": ""
+                "OAUTH2_ACCESS_TOKEN_URI": "",
+                "OAUTH2_READINESS_CHECK_URI": "",
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"

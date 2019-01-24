@@ -49,6 +49,7 @@ namespace Foundation.ObjectService.WebUI
         {
             string authorizationDomain = Common.GetConfigurationVariable(Configuration, "OAUTH2_AUTH_DOMAIN", "Auth:Domain", string.Empty);
             string introspectionUri = Common.GetConfigurationVariable(Configuration, "OAUTH2_ACCESS_TOKEN_URI", "Auth:IntrospectUrl", string.Empty);
+            string apiGatewayReadinessCheckUri = Common.GetConfigurationVariable(Configuration, "OAUTH2_READINESS_CHECK_URI", "Auth:ReadinessCheckUrl", string.Empty);
             
             var tokenType = TokenType.None;
 
@@ -138,10 +139,9 @@ namespace Foundation.ObjectService.WebUI
             services.AddSingleton<IMongoClient>(provider => new MongoClient(settings));
             services.AddSingleton<IObjectRepository>(provider => new MongoRepository(provider.GetService<IMongoClient>(), provider.GetService<ILogger<MongoRepository>>(), GetImmutableCollections()));
 
-            services.AddHealthChecks()
-                .AddCheck<IHealthCheck>("database", null, new List<string> { "ready", "mongo", "db" });
-
-            services.AddSingleton<IHealthCheck>(provider => new ObjectDatabaseHealthCheck("Database", provider.GetService<IObjectRepository>()));
+            services.AddSingleton<ObjectDatabaseHealthCheck>(provider => new ObjectDatabaseHealthCheck("Database", provider.GetService<IObjectRepository>()));
+            IHealthChecksBuilder healthCheckStatusBuilder = services.AddHealthChecks()
+                .AddCheck<ObjectDatabaseHealthCheck>("database", null, new List<string> { "ready", "mongo", "db" });
 
             /* These policy names match the names in the [Authorize] attribute(s) in the Controller classes.
              * The HasScopeHandler class is used (see below) to pass/fail the authorization check if authorization
@@ -172,18 +172,25 @@ namespace Foundation.ObjectService.WebUI
             }
             else if (tokenType == TokenType.Bearer)
             {
-                #region Create an HTTP client with configurable resiliency patterns for token introspection
-                services.AddHttpClient($"OBJECT-INTROSPECTION", client =>
+                // create HTTP client for token introspection
+                services.AddHttpClient($"oauth2-provider", client =>
                 {
                 })
                 .AddTransientHttpErrorPolicy(builder => builder.WaitAndRetryAsync(new[]
                 {
                     TimeSpan.FromMilliseconds(20),
-                    TimeSpan.FromMilliseconds(80),
-                    TimeSpan.FromMilliseconds(240),
+                    TimeSpan.FromMilliseconds(40),
+                    TimeSpan.FromMilliseconds(120),
                 }))
                 .AddPolicyHandler(GetCircuitBreakerPolicy()); // sets a circuit breaker so that after several failed requests, we just stop sending those requests
-                #endregion
+
+                // add health checks for the OAuth2 API gateway
+                if (!string.IsNullOrEmpty(apiGatewayReadinessCheckUri)) 
+                {
+                    services.AddSingleton<HttpHealthCheck>(provider => new HttpHealthCheck("oauth2-provider", introspectionUri, provider.GetService<IHttpClientFactory>(), 100, 500));
+                    healthCheckStatusBuilder.AddCheck<HttpHealthCheck>("oauth2-provider", null, new List<string> { "ready", "oauth2", "api-gateway" });
+                    
+                }
 
                 services.AddAuthentication(options =>
                 {
@@ -240,13 +247,22 @@ namespace Foundation.ObjectService.WebUI
             app.UseHealthChecks(Common.HEALTH_LIVENESS_ENDPOINT, new HealthCheckOptions
             {
                 // Exclude all checks, just return a 200.
-                Predicate = (check) => false
+                Predicate = (check) => false,
+                AllowCachingResponses = false
             });
 
             app.UseHealthChecks(Common.HEALTH_READINESS_ENDPOINT, new HealthCheckOptions
             {
                 Predicate = (check) => check.Tags.Contains("ready"),
-                ResponseWriter = WriteResponse
+                ResponseWriter = WriteResponse,
+                AllowCachingResponses = false,
+
+                ResultStatusCodes =
+                {
+                    [HealthStatus.Healthy] = StatusCodes.Status200OK,
+                    [HealthStatus.Degraded] = StatusCodes.Status200OK,
+                    [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
+                }
             });
 
             app.UseAuthentication();
@@ -302,7 +318,7 @@ namespace Foundation.ObjectService.WebUI
         {
             return HttpPolicyExtensions
                 .HandleTransientHttpError()
-                .CircuitBreakerAsync(5, TimeSpan.FromSeconds(5));
+                .CircuitBreakerAsync(5, TimeSpan.FromSeconds(2));
         }
     }
 #pragma warning restore 1591

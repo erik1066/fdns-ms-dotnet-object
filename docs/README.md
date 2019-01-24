@@ -88,7 +88,9 @@ Developers can easily run [SonarQube](https://www.sonarqube.org/) on `fdns-ms-do
 
 A liveness check is available at `/health/live`. The liveness check returns a 200 OK if the service is running.
 
-A readiness check is available at `/health/ready`. The readiness check shows a status of dependent services such as databases and other microservices. It also checks for degraded performance in addition to whether the services are available.
+A readiness check is available at `/health/ready`. The readiness check shows a status of dependent services such as databases and other microservices. It also checks for degraded performance in addition to whether the services are available. An HTTP 200 is returned for "ready" and "degraded" statuses. An HTTP 503 "Service Unavailable" is returned on `/health/ready` if the readiness probe fails.
+
+If you wish for the OAuth2 API Gateway to be included in the readiness check, set the `OAUTH2_READINESS_CHECK_URI` to the readiness or liveness endpoint of the API Gateway server. Otherwise the API Gateway will not be included.
 
 ## Experimenting with API operations
 
