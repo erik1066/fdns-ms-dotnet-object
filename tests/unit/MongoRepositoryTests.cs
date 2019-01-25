@@ -29,7 +29,7 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                MongoRepository repo = new MongoRepository(null, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
+                MongoService repo = new MongoService(null, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
             });
         }
 
@@ -38,7 +38,7 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                MongoRepository repo = new MongoRepository(_mongoFixture.MongoClient, null, new Dictionary<string, HashSet<string>>());
+                MongoService repo = new MongoService(_mongoFixture.MongoClient, null, new Dictionary<string, HashSet<string>>());
             });
         }
 
@@ -47,21 +47,21 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                MongoRepository repo = new MongoRepository(_mongoFixture.MongoClient, _mongoFixture.Logger, null);
+                MongoService repo = new MongoService(_mongoFixture.MongoClient, _mongoFixture.Logger, null);
             });
         }
 
         [Fact]
         public void Construct_Success()
         {
-            MongoRepository repo = new MongoRepository(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
+            MongoService repo = new MongoService(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
             Assert.True(true);
         }
 
         [Fact]
         public async Task Insert_Object_Success()
         {
-            MongoRepository repo = new MongoRepository(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
+            MongoService repo = new MongoService(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
             string json = "{ \"Name\" : \"John\" }";
 
             var insertResult = await repo.InsertAsync("bookstore", "users", 1, json);
@@ -81,7 +81,7 @@ namespace Foundation.ObjectService.WebUI.Tests
         //     settings.Server = new MongoServerAddress("localhost", 5555); // wrong port, no DB there
 
         //     var mongoClient = new MongoClient(settings);             
-        //     MongoRepository repo = new MongoRepository(mongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
+        //     MongoService repo = new MongoRepository(mongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
             
         //     string json = "{ \"Name\" : \"John\" }";
 
@@ -98,7 +98,7 @@ namespace Foundation.ObjectService.WebUI.Tests
         [Fact]
         public async Task Insert_Object_Does_Not_Overwrite()
         {
-            MongoRepository repo = new MongoRepository(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
+            MongoService repo = new MongoService(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
             string json = "{ \"Name\" : \"Jane\" }";
 
             var insertResult = await repo.InsertAsync("bookstore", "users", "2", json);
@@ -121,7 +121,7 @@ namespace Foundation.ObjectService.WebUI.Tests
         [Fact]
         public async Task Delete_Object_Success()
         {
-            MongoRepository repo = new MongoRepository(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
+            MongoService repo = new MongoService(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
             string json = "{ \"Name\" : \"Maria\" }";
 
             var insertResult = await repo.InsertAsync("bookstore", "users", "3", json);
@@ -136,7 +136,7 @@ namespace Foundation.ObjectService.WebUI.Tests
         [Fact]
         public async Task Replace_Object_Success()
         {
-            MongoRepository repo = new MongoRepository(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
+            MongoService repo = new MongoService(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
             string json1 = "{ \"Name\" : \"Enrique\" }";
             string json2 = "{ \"Name\" : \"Enrique Hernandez\" }";
 
@@ -159,7 +159,7 @@ namespace Foundation.ObjectService.WebUI.Tests
             var immutables = new Dictionary<string, HashSet<string>>();
             immutables.Add("bookstore", new HashSet<string>() { "accounts" });
 
-            MongoRepository repo = new MongoRepository(_mongoFixture.MongoClient, _mongoFixture.Logger, immutables);
+            MongoService repo = new MongoService(_mongoFixture.MongoClient, _mongoFixture.Logger, immutables);
             string json = "{ \"Name\" : \"Enrique\" }";
 
             try 
@@ -178,7 +178,7 @@ namespace Foundation.ObjectService.WebUI.Tests
         [InlineData("{ \"Name: \"John\" }" /* property is missing end quote */)]
         public async Task Insert_Object_Fail_Bad_Json(string badJson)
         {
-            MongoRepository repo = new MongoRepository(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
+            MongoService repo = new MongoService(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
             try 
             {
                 var result = await repo.InsertAsync("bookstore", "users", 1, badJson);
@@ -194,20 +194,20 @@ namespace Foundation.ObjectService.WebUI.Tests
     {
         internal static MongoDbRunner _runner;
 
-        public ILogger<MongoRepository> Logger { get; private set; }
+        public ILogger<MongoService> Logger { get; private set; }
         public IMongoClient MongoClient { get; private set; }
-        public IObjectRepository MongoRepository { get; private set; }
+        public IObjectService MongoRepository { get; private set; }
 
         public MongoRepositoryFixture()
         {
-            Logger = new Mock<ILogger<MongoRepository>>().Object;
+            Logger = new Mock<ILogger<MongoService>>().Object;
             _runner = MongoDbRunner.Start();
             MongoClient = new MongoClient(_runner.ConnectionString);
 
             var immutables = new Dictionary<string, HashSet<string>>();
             immutables.Add("immutabledatabase", new HashSet<string>() { "immutablecollection" });
 
-            MongoRepository = new MongoRepository(MongoClient, Logger, immutables);
+            MongoRepository = new MongoService(MongoClient, Logger, immutables);
         }
 
         public void Dispose()

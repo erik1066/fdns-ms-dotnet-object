@@ -22,13 +22,13 @@ using Newtonsoft.Json.Serialization;
 namespace Foundation.ObjectService.Data
 {
     /// <summary>
-    /// Class representing a MongoDB repository for arbitrary, untyped Json objects
+    /// Class representing a MongoDB service for arbitrary, untyped Json objects
     /// </summary>
-    public class MongoRepository : IObjectRepository
+    public class MongoService : IObjectService
     {
         private readonly IMongoClient _client = null;
         private readonly JsonWriterSettings _jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Strict };
-        private readonly ILogger<MongoRepository> _logger;
+        private readonly ILogger<MongoService> _logger;
         private const string ID_PROPERTY_NAME = "_id";
         private readonly Dictionary<string, HashSet<string>> _immutableCollections;
 
@@ -38,7 +38,7 @@ namespace Foundation.ObjectService.Data
         /// <param name="client">MongoDB client</param>
         /// <param name="logger">Logger</param>
         /// <param name="immutableCollections">List of immutable collections</param>
-        public MongoRepository(IMongoClient client, ILogger<MongoRepository> logger, Dictionary<string, HashSet<string>> immutableCollections)
+        public MongoService(IMongoClient client, ILogger<MongoService> logger, Dictionary<string, HashSet<string>> immutableCollections)
         {
             if (logger == null)
             {

@@ -27,7 +27,7 @@ namespace Foundation.ObjectService.WebUI
         private readonly int _degradationThreshold;
         private readonly int _cancellationThreshold;
         private readonly string _description;
-        private readonly IObjectRepository _repository = null;
+        private readonly IObjectService _service = null;
         private const string DUMMY_DB_NAME = "_healthcheckdatabase_";
         private const string DUMMY_COLLECTION_NAME = "_healthcheckcollection_";
 
@@ -35,19 +35,19 @@ namespace Foundation.ObjectService.WebUI
         /// Constructor
         /// </summary>
         /// <param name="description">Description of the health check</param>
-        /// <param name="repository">The NoSQL object repository to use for the check</param>
+        /// <param name="service">The NoSQL object service to use for the check</param>
         /// <param name="degradationThreshold">The threshold in milliseconds after which to consider the database degraded</param>
         /// <param name="cancellationThreshold">The threshold in milliseconds after which to cancel the check and consider the database unavailable</param>
-        public ObjectDatabaseHealthCheck(string description, IObjectRepository repository, int degradationThreshold = 1000, int cancellationThreshold = 2000)
+        public ObjectDatabaseHealthCheck(string description, IObjectService service, int degradationThreshold = 1000, int cancellationThreshold = 2000)
         {
             #region Input validation
             if (string.IsNullOrEmpty(description))
             {
                 throw new ArgumentNullException(nameof(description));
             }
-            if (repository == null)
+            if (service == null)
             {
-                throw new ArgumentNullException(nameof(repository));
+                throw new ArgumentNullException(nameof(service));
             }
             if (degradationThreshold < 0)
             {
@@ -60,7 +60,7 @@ namespace Foundation.ObjectService.WebUI
             #endregion // Input validation
 
             _description = description;
-            _repository = repository;
+            _service = service;
             _degradationThreshold = degradationThreshold;
             _cancellationThreshold = cancellationThreshold;
         }
@@ -85,9 +85,9 @@ namespace Foundation.ObjectService.WebUI
                     var sw = new Stopwatch();
                     sw.Start();
 
-                    await _repository.DeleteAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1);
-                    await _repository.InsertAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1, "{ 'name' : 'the nameless ones' }");
-                    await _repository.GetAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1);
+                    await _service.DeleteAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1);
+                    await _service.InsertAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1, "{ 'name' : 'the nameless ones' }");
+                    await _service.GetAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1);
 
                     sw.Stop();
                     var elapsed = sw.Elapsed.TotalMilliseconds.ToString("N0");

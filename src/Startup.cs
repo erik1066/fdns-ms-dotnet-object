@@ -137,9 +137,9 @@ namespace Foundation.ObjectService.WebUI
             }
 
             services.AddSingleton<IMongoClient>(provider => new MongoClient(settings));
-            services.AddSingleton<IObjectRepository>(provider => new MongoRepository(provider.GetService<IMongoClient>(), provider.GetService<ILogger<MongoRepository>>(), GetImmutableCollections()));
+            services.AddSingleton<IObjectService>(provider => new MongoService(provider.GetService<IMongoClient>(), provider.GetService<ILogger<MongoService>>(), GetImmutableCollections()));
 
-            services.AddSingleton<ObjectDatabaseHealthCheck>(provider => new ObjectDatabaseHealthCheck("Database", provider.GetService<IObjectRepository>()));
+            services.AddSingleton<ObjectDatabaseHealthCheck>(provider => new ObjectDatabaseHealthCheck("Database", provider.GetService<IObjectService>()));
             IHealthChecksBuilder healthCheckStatusBuilder = services.AddHealthChecks()
                 .AddCheck<ObjectDatabaseHealthCheck>("database", null, new List<string> { "ready", "mongo", "db" });
 

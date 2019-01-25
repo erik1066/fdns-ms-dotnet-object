@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 namespace Foundation.ObjectService.Data
 {
     /// <summary>
-    /// Interface representing a repository for arbitrary, untyped Json objects
+    /// Interface representing a service for arbitrary, untyped Json objects
     /// </summary>
-    public interface IObjectRepository
+    public interface IObjectService
     {
         /// <summary>
         /// Gets a single object

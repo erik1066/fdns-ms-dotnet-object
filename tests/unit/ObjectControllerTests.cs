@@ -622,20 +622,20 @@ namespace Foundation.ObjectService.WebUI.Tests
     {
         internal static MongoDbRunner _runner;
 
-        public ILogger<MongoRepository> Logger { get; private set; }
+        public ILogger<MongoService> Logger { get; private set; }
         public IMongoClient MongoClient { get; private set; }
-        public IObjectRepository MongoRepository { get; private set; }
+        public IObjectService MongoRepository { get; private set; }
 
         public ObjectControllerFixture()
         {
-            Logger = new Mock<ILogger<MongoRepository>>().Object;
+            Logger = new Mock<ILogger<MongoService>>().Object;
             _runner = MongoDbRunner.Start();
             MongoClient = new MongoClient(_runner.ConnectionString);
 
             var immutables = new Dictionary<string, HashSet<string>>();
             immutables.Add("immutabledatabase", new HashSet<string>() { "immutablecollection" });
 
-            MongoRepository = new MongoRepository(MongoClient, Logger, immutables);
+            MongoRepository = new MongoService(MongoClient, Logger, immutables);
         }
 
         public void Dispose()

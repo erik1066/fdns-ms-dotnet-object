@@ -32,15 +32,15 @@ namespace Foundation.ObjectService.WebUI.Controllers
     [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public class ObjectController : ControllerBase
     {
-        private readonly IObjectRepository _repository;
+        private readonly IObjectService _service;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="repository">The object repository to use for interacting with the underlying database</param>
-        public ObjectController(IObjectRepository repository)
+        /// <param name="service">The object service to use for interacting with the underlying database</param>
+        public ObjectController(IObjectService service)
         {
-            _repository = repository;
+            _service = service ?? throw new ArgumentNullException(nameof(service));
         }
 
         // GET api/1.0/db/collection/5
@@ -60,7 +60,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var document = await _repository.GetAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id);
+            var document = await _service.GetAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id);
             if (document == null)
             {
                 return ObjectNotFound(routeParameters.Id, routeParameters.CollectionName);
@@ -107,7 +107,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            string document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
+            string document = await _service.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
 
             if (responseFormat == ResponseFormat.OnlyId)
             {
@@ -166,7 +166,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            string document = await _repository.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, null, json);            
+            string document = await _service.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, null, json);            
             string id = GetObjectId(document);
 
             if (responseFormat == ResponseFormat.OnlyId)
@@ -217,7 +217,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
             
-            string document = await _repository.ReplaceAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
+            string document = await _service.ReplaceAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
 
             if (string.IsNullOrEmpty(document))
             {
@@ -254,7 +254,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            bool deleted = await _repository.DeleteAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id);
+            bool deleted = await _service.DeleteAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id);
 
             if (deleted)
             {
@@ -284,13 +284,13 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            var exists = await _repository.DoesCollectionExist(routeParameters.DatabaseName, routeParameters.CollectionName);
+            var exists = await _service.DoesCollectionExist(routeParameters.DatabaseName, routeParameters.CollectionName);
             if (!exists)
             {
                 return CollectionNotFound(routeParameters.CollectionName);
             }
 
-            var deleted = await _repository.DeleteCollectionAsync(routeParameters.DatabaseName, routeParameters.CollectionName);
+            var deleted = await _service.DeleteCollectionAsync(routeParameters.DatabaseName, routeParameters.CollectionName);
             if (deleted)
             {
                 return Ok();
@@ -367,7 +367,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var findResults = await _repository.FindAsync(routeParameters.DatabaseName, routeParameters.CollectionName, findExpression, queryParameters.Start, queryParameters.Limit, queryParameters.SortFieldName, System.ComponentModel.ListSortDirection.Ascending);
+            var findResults = await _service.FindAsync(routeParameters.DatabaseName, routeParameters.CollectionName, findExpression, queryParameters.Start, queryParameters.Limit, queryParameters.SortFieldName, System.ComponentModel.ListSortDirection.Ascending);
             return Ok(findResults);
         }
 
@@ -405,7 +405,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
             var findExpression = SearchStringConverter.BuildQuery(qs);
-            var findResults = await _repository.FindAsync(routeParameters.DatabaseName, routeParameters.CollectionName, findExpression, queryParameters.Start, queryParameters.Limit, queryParameters.SortFieldName, System.ComponentModel.ListSortDirection.Ascending);
+            var findResults = await _service.FindAsync(routeParameters.DatabaseName, routeParameters.CollectionName, findExpression, queryParameters.Start, queryParameters.Limit, queryParameters.SortFieldName, System.ComponentModel.ListSortDirection.Ascending);
             return Ok(findResults);
         }
 
@@ -426,13 +426,13 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            var exists = await _repository.DoesCollectionExist(routeParameters.DatabaseName, routeParameters.CollectionName);
+            var exists = await _service.DoesCollectionExist(routeParameters.DatabaseName, routeParameters.CollectionName);
             if (!exists)
             {
                 return CollectionNotFound(routeParameters.CollectionName);
             }
             
-            var findResults = await _repository.GetAllAsync(routeParameters.DatabaseName, routeParameters.CollectionName);
+            var findResults = await _service.GetAllAsync(routeParameters.DatabaseName, routeParameters.CollectionName);
             return Ok(findResults);
         }
 
@@ -470,7 +470,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            var countResults = await _repository.CountAsync(routeParameters.DatabaseName, routeParameters.CollectionName, countExpression);
+            var countResults = await _service.CountAsync(routeParameters.DatabaseName, routeParameters.CollectionName, countExpression);
             return Ok(countResults);
         }
 
@@ -516,7 +516,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            string distinctResults = await _repository.GetDistinctAsync(routeParameters.DatabaseName, routeParameters.CollectionName, field, findExpression);
+            string distinctResults = await _service.GetDistinctAsync(routeParameters.DatabaseName, routeParameters.CollectionName, field, findExpression);
             return Ok(distinctResults);
         }
 
@@ -574,7 +574,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            var aggregateResults = await _repository.AggregateAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
+            var aggregateResults = await _service.AggregateAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
             return Ok(aggregateResults);
         }
 
@@ -633,7 +633,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            var results = await _repository.InsertManyAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
+            var results = await _service.InsertManyAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
             return Ok(GetInsertedJsonResult(results));
         }
 
@@ -677,7 +677,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 }
 
                 string payload = "[" + string.Join(',', rows) + "]";
-                var results = await _repository.InsertManyAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
+                var results = await _service.InsertManyAsync(routeParameters.DatabaseName, routeParameters.CollectionName, payload);
 
                 return Ok(GetInsertedJsonResult(results));
             }
