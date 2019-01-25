@@ -5,6 +5,7 @@
 - [Debugging using Visual Studio Code](#debugging-using-visual-studio-code)
 - [Debugging unit tests using Visual Studio Code](#debugging-unit-tests-using-visual-studio-code)
 - [Running from the command line without containerization](#running-from-the-command-line-without-containerization)
+- [Running integration, security, and performance tests](#running-integration-security-and-performance-tests)
 - [Analyzing code for quality and vulnerabilities](#analyzing-code-for-quality-and-vulnerabilities)
 - [Readiness and liveness checks](#readiness-and-liveness-checks)
 - [Experimenting with API operations](#experimenting-with-api-operations)
@@ -71,6 +72,14 @@ To run tests from the command line:
 1. Open Bash or a Bash-like terminal
 1. `cd` to the `fdns-ms-dotnet-object/tests` folder
 1. Execute `dotnet test`
+
+## Running integration, security, and performance tests
+
+```bash
+make run-integration-tests
+make run-security-tests
+make run-performance-tests
+```
 
 ## Analyzing code for quality and vulnerabilities
 

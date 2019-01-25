@@ -34,6 +34,7 @@ Then navigate to http://localhost:9090.
 - [Debugging using Visual Studio Code](docs/README.md#debugging-using-visual-studio-code)
 - [Debugging unit tests using Visual Studio Code](docs/README.md#debugging-unit-tests-using-visual-studio-code)
 - [Running from the command line without containerization](docs/README.md#running-from-the-command-line-without-containerization)
+- [Running integration, security, and performance tests](docs/README.md#running-integration-security-and-performance-tests)
 - [Analyzing code for quality and vulnerabilities](docs/README.md#analyzing-code-for-quality-and-vulnerabilities)
 - [Readiness and liveness checks](docs/README.md#readiness-and-liveness-checks)
 - [Experimenting with API operations](docs/README.md#experimenting-with-api-operations)

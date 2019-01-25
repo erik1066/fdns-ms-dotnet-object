@@ -16,6 +16,7 @@
     </PackageReference>
     <PackageReference Include="Moq" Version="4.10.1" />
     <PackageReference Include="Mongo2Go" Version="2.2.8" />
+    <PackageReference Include="RichardSzalay.MockHttp" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>

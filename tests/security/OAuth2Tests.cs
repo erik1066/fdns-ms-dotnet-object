@@ -60,11 +60,15 @@ namespace Foundation.ObjectService.SecurityTests
         /// <param name="url">URL to be accessed</param>
         [Theory]
         [InlineData("/api/1.0")]
-        [InlineData("/health/live")]
-        [InlineData("/health/ready")]
         public void No_Auth_Needed_Success(string url)
         {
-            InsertOneRecord();
+            try 
+            {
+                InsertOneRecord();
+            }
+            catch (Exception ex) when (ex.Message.Contains("E11000"))
+            {
+            }
 
             // No auth needed for health checks and the version # endpoint
 
@@ -89,8 +93,6 @@ namespace Foundation.ObjectService.SecurityTests
         [Theory]
         [InlineData("/api/1.0")]
         [InlineData("/api/1.0/bookstore/books/1")]
-        [InlineData("/health/live")]
-        [InlineData("/health/ready")]
         public void Valid_Read_Token(string url)
         {
             InsertOneRecord();

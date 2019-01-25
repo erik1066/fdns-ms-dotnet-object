@@ -72,7 +72,7 @@ run-security-tests:
 	docker-compose --file tests/security/docker-compose.yml up --detach
 	printf 'Wait for Hydra\n'
 	until `curl --output /dev/null --silent --fail --connect-timeout 80 http://localhost:4445/health/ready`; do printf '.'; sleep 1; done
-	sleep 1
+	sleep 2
 	docker exec -it security_hydra_1 \
 		hydra clients create \
 		--endpoint http://localhost:4445 \

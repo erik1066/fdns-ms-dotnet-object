@@ -70,15 +70,25 @@ namespace Foundation.ObjectService.WebUI
 
                 try 
                 {
+                    HttpStatusCode status;
+                    bool isSuccessCode = false;
+
                     using (HttpResponseMessage response = await _client.SendAsync(requestMessage))
                     {
-                        await response.Content.ReadAsStringAsync();
+                        status = response.StatusCode;
+                        isSuccessCode = response.IsSuccessStatusCode;
                     }
 
                     sw.Stop();
                     var elapsed = sw.Elapsed.TotalMilliseconds.ToString("N0");
 
-                    if (sw.Elapsed.TotalMilliseconds > _degradationThreshold)
+                    if (!isSuccessCode)
+                    {
+                        checkResult = HealthCheckResult.Unhealthy(
+                            data: new Dictionary<string, object> { ["elapsed"] = elapsed },
+                            description: $"{_description} liveness probe failed due to {status} HTTP response");
+                    }
+                    else if (sw.Elapsed.TotalMilliseconds > _degradationThreshold)
                     {
                         checkResult = HealthCheckResult.Degraded(
                             data: new Dictionary<string, object> { ["elapsed"] = elapsed },
@@ -95,7 +105,7 @@ namespace Foundation.ObjectService.WebUI
                 {
                     checkResult = HealthCheckResult.Unhealthy(
                         data: new Dictionary<string, object> { ["exceptionType"] = ex.GetType().ToString() },
-                        description: $"{_description} liveness check failed due to exception");
+                        description: $"{_description} liveness probe failed due to exception");
                 }
                 finally
                 {
