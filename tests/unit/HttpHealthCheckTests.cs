@@ -35,7 +35,7 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             // arrange
             var factory = _fixture.GetSuccessClientFactory();
-            var check = new HttpHealthCheck("unittests-1", "http://localhost/health/ready", factory, 100, 500);
+            var check = new HttpHealthCheck("unittests-1", "http://localhost/health/ready", factory, 1000, 2000);
             var context = new HealthCheckContext();
 
             // act
