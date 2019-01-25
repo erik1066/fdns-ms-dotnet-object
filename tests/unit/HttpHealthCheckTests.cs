@@ -130,7 +130,6 @@ namespace Foundation.ObjectService.WebUI.Tests
                 message.StatusCode = HttpStatusCode.OK;
                 return message;
             });
-                //.Respond(HttpStatusCode.ServiceUnavailable, "application/json", "{}");
 
             var client = mockHttp.ToHttpClient();
             client.BaseAddress = new Uri("http://localhost/");
