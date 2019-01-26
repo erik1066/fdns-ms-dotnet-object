@@ -160,7 +160,14 @@ namespace Foundation.ObjectService.WebUI.Tests
             mockObjectService.Setup(o => o.DeleteAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1))
             .Returns( async () => 
             { 
-                await Task.Run(() => System.Threading.Thread.Sleep(50));
+                await Task.Run(() => 
+                {
+                    for (long i = 0; i < 1_000_000_000_000; i++)
+                    {
+                        var y = i * i;
+                        string x = y.ToString(); // just waste some time
+                    }
+                });
                 return true;
             });
 
