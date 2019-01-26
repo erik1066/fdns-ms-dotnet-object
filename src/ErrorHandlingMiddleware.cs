@@ -51,7 +51,7 @@ namespace Foundation.ObjectService.WebUI
             var result = JsonConvert.SerializeObject(new ProblemDetails() 
             {
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                Title = "Bad Request",
+                Title = code.ToString(),
                 Status = numericCode,
                 Detail = exception.Message
             });
