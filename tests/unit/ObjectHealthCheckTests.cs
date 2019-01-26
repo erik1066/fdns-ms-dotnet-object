@@ -160,14 +160,14 @@ namespace Foundation.ObjectService.WebUI.Tests
             mockObjectService.Setup(o => o.DeleteAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1))
             .Returns( async () => 
             { 
-                await Task.Run(() => System.Threading.Thread.Sleep(5));
+                await Task.Run(() => System.Threading.Thread.Sleep(50));
                 return true;
             });
 
             mockObjectService.Setup(o => o.InsertAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1, "{ 'name' : 'the nameless ones' }")).ReturnsAsync(string.Empty);
             mockObjectService.Setup(o => o.GetAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1)).ReturnsAsync(string.Empty);
 
-            var check = new ObjectDatabaseHealthCheck("unittests-1", mockObjectService.Object, 0, 0);
+            var check = new ObjectDatabaseHealthCheck("unittests-1", mockObjectService.Object, 0, 1);
             var context = new HealthCheckContext();
 
             // act
