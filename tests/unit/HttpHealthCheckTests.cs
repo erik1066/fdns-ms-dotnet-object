@@ -93,7 +93,6 @@ namespace Foundation.ObjectService.WebUI.Tests
 
     public class HttpHealthCheckFixture : IDisposable
     {
-
         public HttpHealthCheckFixture()
         {            
         }

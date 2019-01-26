@@ -28,8 +28,16 @@ namespace Foundation.ObjectService.WebUI
         private readonly int _cancellationThreshold;
         private readonly string _description;
         private readonly IObjectService _service = null;
-        private const string DUMMY_DB_NAME = "_healthcheckdatabase_";
-        private const string DUMMY_COLLECTION_NAME = "_healthcheckcollection_";
+
+        /// <summary>
+        /// Name of the dummy database to use for checks
+        /// </summary>
+        public const string DummyDatabaseName = "_healthcheckdatabase_";
+
+        /// <summary>
+        /// Name of the dummy collection in the dummy database to use for checks
+        /// </summary>
+        public const string DummyCollectionName = "_healthcheckcollection_";
 
         /// <summary>
         /// Constructor
@@ -56,6 +64,10 @@ namespace Foundation.ObjectService.WebUI
             if (cancellationThreshold < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(cancellationThreshold));
+            }
+            if (cancellationThreshold < degradationThreshold)
+            {
+                throw new InvalidOperationException("Cancellation threshold cannot be less than degredation threshold");
             }
             #endregion // Input validation
 
@@ -85,9 +97,9 @@ namespace Foundation.ObjectService.WebUI
                     var sw = new Stopwatch();
                     sw.Start();
 
-                    await _service.DeleteAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1);
-                    await _service.InsertAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1, "{ 'name' : 'the nameless ones' }");
-                    await _service.GetAsync(DUMMY_DB_NAME, DUMMY_COLLECTION_NAME, 1);
+                    await _service.DeleteAsync(DummyDatabaseName, DummyCollectionName, 1);
+                    await _service.InsertAsync(DummyDatabaseName, DummyCollectionName, 1, "{ 'name' : 'the nameless ones' }");
+                    await _service.GetAsync(DummyDatabaseName, DummyCollectionName, 1);
 
                     sw.Stop();
                     var elapsed = sw.Elapsed.TotalMilliseconds.ToString("N0");
