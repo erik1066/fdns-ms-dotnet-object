@@ -162,6 +162,7 @@ namespace Foundation.ObjectService.WebUI.Tests
             { 
                 await Task.Run(() => 
                 {
+                    System.Threading.Thread.Sleep(50);
                     for (long i = 0; i < 1_000_000_000_000; i++)
                     {
                         var y = i * i;
