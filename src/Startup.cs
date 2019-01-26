@@ -187,7 +187,7 @@ namespace Foundation.ObjectService.WebUI
                 // add health checks for the OAuth2 API gateway
                 if (!string.IsNullOrEmpty(apiGatewayReadinessCheckUri)) 
                 {
-                    services.AddSingleton<HttpHealthCheck>(provider => new HttpHealthCheck("oauth2-provider", introspectionUri, provider.GetService<IHttpClientFactory>(), 100, 500));
+                    services.AddSingleton<HttpHealthCheck>(provider => new HttpHealthCheck("oauth2-provider", apiGatewayReadinessCheckUri, provider.GetService<IHttpClientFactory>(), 100, 500));
                     healthCheckStatusBuilder.AddCheck<HttpHealthCheck>("oauth2-provider", null, new List<string> { "ready", "oauth2", "api-gateway" });
                     
                 }
