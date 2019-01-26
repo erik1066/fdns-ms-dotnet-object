@@ -30,6 +30,72 @@ namespace Foundation.ObjectService.WebUI.Tests
             this._fixture = fixture;
         }
 
+        [Theory]
+        [InlineData("")]
+        [InlineData(null)]
+        public void Construct_Fail_Invalid_Description(string description)
+        {
+            // arrange
+            var factory = _fixture.GetSuccessClientFactory();
+
+            // act
+            Action act = () => new HttpHealthCheck(description, "http://localhost/health/ready", factory, 1000, 2000);
+
+            // assert
+            Assert.Throws<ArgumentNullException>(act);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData(null)]
+        public void Construct_Fail_Invalid_Url(string url)
+        {
+            // arrange
+            var factory = _fixture.GetSuccessClientFactory();
+
+            // act
+            Action act = () => new HttpHealthCheck("unit-tests", url, factory, 1000, 2000);
+
+            // assert
+            Assert.Throws<ArgumentNullException>(act);
+        }
+
+        [Fact]
+        public void Construct_Fail_Null_Factory()
+        {
+            // act
+            Action act = () => new HttpHealthCheck("unit-tests", "http://localhost/health/ready", null, 100, 200);
+
+            // assert
+            Assert.Throws<ArgumentNullException>(act);
+        }
+
+        [Fact]
+        public void Construct_Fail_Degradation_Threshold_Less_than_zero()
+        {
+            // arrange
+            var factory = _fixture.GetSuccessClientFactory();
+
+            // act
+            Action act = () => new HttpHealthCheck("unit-tests", "http://localhost/health/ready", factory, -1, 200);
+
+            // assert
+            Assert.Throws<ArgumentOutOfRangeException>(act);
+        }
+
+        [Fact]
+        public void Construct_Fail_Cancellation_Threshold_Less_than_zero()
+        {
+            // arrange
+            var factory = _fixture.GetSuccessClientFactory();
+
+            // act
+            Action act = () => new HttpHealthCheck("unit-tests", "http://localhost/health/ready", factory, 100, -5);
+
+            // assert
+            Assert.Throws<ArgumentOutOfRangeException>(act);
+        }
+
         [Fact]
         public void Test_Service_Ready()
         {
