@@ -88,6 +88,36 @@ namespace Foundation.ObjectService.WebUI.Tests
         }
 
         [Theory]
+        [InlineData("{ \"title\": \"The Red Badge of Courage\" }", "{ \"_id\" : REPLACEME, \"title\" : \"The Red Badge of Courage\" }")]
+        [InlineData("{ \"title\": \"Don Quixote\" }", "{ \"_id\" : REPLACEME, \"title\" : \"Don Quixote\" }")]
+        [InlineData("{ \"title\": \"A Connecticut Yankee in King Arthur's Court\" }", "{ \"_id\" : REPLACEME, \"title\" : \"A Connecticut Yankee in King Arthur's Court\" }")]
+        public async Task Get_Object_by_ObjectId_with_underscores_in_route(string insertedJson, string expectedJson)
+        {
+            // Arrange
+            var controller = new ObjectController(_fixture.MongoRepository);
+            var collectionName = "books_collection";
+            var databaseName = "books_database";
+
+            // Act
+            var insertResult = await controller.InsertObjectWithNoId(new ItemRouteParameters() { DatabaseName = databaseName, CollectionName = collectionName }, insertedJson, ResponseFormat.OnlyId);
+
+            CreatedAtActionResult createdResult = ((CreatedAtActionResult)insertResult);
+            JObject jsonObject = JObject.Parse(createdResult.Value.ToString());
+
+            JArray jsonArray = JArray.Parse(jsonObject["ids"].ToString());
+            var id = jsonArray[0].ToString();
+
+            var getResult = await controller.GetObject(new ItemRouteParameters() { DatabaseName = databaseName, CollectionName = collectionName, Id = id });
+
+            OkObjectResult okResult = ((OkObjectResult)getResult);
+            string receivedJson = okResult.Value.ToString();
+
+            // Assert
+            Assert.Equal(200, okResult.StatusCode);
+            Assert.Equal(expectedJson.Replace("REPLACEME", "{ \"$oid\" : \"" + id + "\" }"), receivedJson);
+        }
+
+        [Theory]
         [InlineData("1")]
         [InlineData("2")]
         [InlineData("ABCD")]

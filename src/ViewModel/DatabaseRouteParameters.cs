@@ -15,7 +15,7 @@ namespace Foundation.ObjectService.ViewModel
         /// <example>bookstore</example>
         [Required]
         [StringLength(250)]
-        [RegularExpression(@"^[a-zA-Z0-9]*$")]
+        [RegularExpression(@"^[a-zA-Z0-9_]*$")]
         [FromRoute(Name = "db")]
         public string DatabaseName { get; set; }
 
@@ -25,7 +25,7 @@ namespace Foundation.ObjectService.ViewModel
         /// <example>customer</example>
         [Required]
         [StringLength(250)]
-        [RegularExpression(@"^[a-zA-Z0-9\.]*$")]
+        [RegularExpression(@"^[a-zA-Z0-9_\.]*$")]
         [FromRoute(Name = "collection")]
         public string CollectionName { get; set; }
     }
