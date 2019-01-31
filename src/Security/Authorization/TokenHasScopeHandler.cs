@@ -21,9 +21,12 @@ namespace Foundation.ObjectService.Security
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <param name="systemName">The name of the system to which the verifying service belongs</param>
+        /// <param name="serviceName">The name of the verifying service</param>
         /// <param name="introspectionUri">The Uri to use for token introspection</param>
         /// <param name="httpClientFactory">HttpClient factory to use for the introspection request</param>
-        public TokenHasScopeHandler(string introspectionUri, IHttpClientFactory httpClientFactory)
+        public TokenHasScopeHandler(string systemName, string serviceName, string introspectionUri, IHttpClientFactory httpClientFactory) 
+            : base(systemName, serviceName)
         {
             _client = httpClientFactory.CreateClient($"oauth2-provider");
             _introspectionUri = introspectionUri;

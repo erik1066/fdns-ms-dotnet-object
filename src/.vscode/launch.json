@@ -31,11 +31,15 @@
             },
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development",
+                "SYSTEM_NAME": "fdns",
+                "OBJECT_SERVICE_NAME": "object",
                 "OBJECT_MONGO_CONNECTION_STRING": "mongodb://localhost:27017",
                 "OBJECT_MONGO_USE_SSL": "false",
                 "OBJECT_FLUENTD_HOST": "localhost",
                 "OBJECT_FLUENTD_PORT": "24224",
-                "OBJECT_IMMUTABLE": "abcd/def"
+                "OBJECT_IMMUTABLE": "abcd/def",
+                "OAUTH2_ACCESS_TOKEN_URI": "",
+                "OAUTH2_READINESS_CHECK_URI": ""
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"

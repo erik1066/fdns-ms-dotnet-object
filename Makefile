@@ -3,6 +3,8 @@ docker-build:
 		-t fdns-ms-dotnet-object \
 		--rm \
 		--force-rm=true \
+		--build-arg SYSTEM_NAME=fdns \
+		--build-arg OBJECT_SERVICE_NAME=object \
 		--build-arg OBJECT_PORT=9090 \
 		--build-arg OBJECT_MONGO_CONNECTION_STRING=mongodb://mongo:27017 \
 		--build-arg OBJECT_MONGO_USE_SSL=false \

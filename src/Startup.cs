@@ -1,4 +1,6 @@
-﻿using System;
+﻿#pragma warning disable 1591 // disables the warnings about missing Xml code comments
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -34,12 +36,14 @@ using Foundation.ObjectService.Security;
 
 namespace Foundation.ObjectService.WebUI
 {
-#pragma warning disable 1591 // disables the warnings about missing Xml code comments
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly ILogger _logger;
+
+        public Startup(IConfiguration configuration, ILoggerFactory loggerFactory)
         {
             Configuration = configuration;
+            _logger = loggerFactory.CreateLogger<Startup>();
         }
 
         public IConfiguration Configuration { get; }
@@ -47,6 +51,9 @@ namespace Foundation.ObjectService.WebUI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            string systemName = Common.GetConfigurationVariable(Configuration, "SYSTEM_NAME", "SystemName", string.Empty);
+            string objectServiceName = Common.GetConfigurationVariable(Configuration, "OBJECT_SERVICE_NAME", "ObjectServiceName", string.Empty);            
+
             string authorizationDomain = Common.GetConfigurationVariable(Configuration, "OAUTH2_AUTH_DOMAIN", "Auth:Domain", string.Empty);
             string introspectionUri = Common.GetConfigurationVariable(Configuration, "OAUTH2_ACCESS_TOKEN_URI", "Auth:IntrospectUrl", string.Empty);
             string apiGatewayReadinessCheckUri = Common.GetConfigurationVariable(Configuration, "OAUTH2_READINESS_CHECK_URI", "Auth:ReadinessCheckUrl", string.Empty);
@@ -62,48 +69,7 @@ namespace Foundation.ObjectService.WebUI
                 tokenType = TokenType.Jwt;
             }
             
-            services.AddSwaggerGen(c =>
-            {
-                #region Swagger generation
-                c.SwaggerDoc("v1", new Info
-                    {
-                        Title = "FDNS Object Microservice API",
-                        Version = "v1",
-                        Description = "A microservice for providing an abstraction layer to a database engine, where HTTP actions are mapped to CRUD operations. Clients of the object service and the underlying database technology may thus change independent of one another provided the API remains consistent.",
-                        Contact = new Contact
-                        {
-                            Name = "Erik Knudsen",
-                            Email = string.Empty,
-                            Url = "https://github.com/erik1066"
-                        },
-                        License = new License
-                        {
-                            Name = "Apache 2.0",
-                            Url = "https://www.apache.org/licenses/LICENSE-2.0"
-                        }
-                    }
-                );
-
-                if (tokenType != TokenType.None)
-                {
-                    c.AddSecurityDefinition("Bearer", new ApiKeyScheme 
-                    { 
-                        In = "header", 
-                        Description = "Please enter Token into field", 
-                        Name = "Authorization", 
-                        Type = "apiKey" 
-                    });
-
-                    c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>> {
-                        { "Bearer", Enumerable.Empty<string>() },
-                    });
-                }
-
-                // These two lines are necessary for Swagger to pick up the C# XML comments and show them in the Swagger UI. See https://github.com/domaindrivendev/Swashbuckle.AspNetCore for more details.
-                var filePath = System.IO.Path.Combine(System.AppContext.BaseDirectory, "api.xml");
-                c.IncludeXmlComments(filePath);
-                #endregion
-            });
+            AddSwaggerServices(services, tokenType);
 
             services.AddMvc(options =>
             {
@@ -134,6 +100,10 @@ namespace Foundation.ObjectService.WebUI
             if (mongoUseSsl.Equals("true", StringComparison.OrdinalIgnoreCase))
             {
                 settings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
+            }
+            else
+            {
+                _logger.LogWarning("MongoDB connection is not using SSL");
             }
 
             services.AddSingleton<IMongoClient>(provider => new MongoClient(settings));
@@ -168,7 +138,9 @@ namespace Foundation.ObjectService.WebUI
                     options.Audience = Common.GetConfigurationVariable(Configuration, "OAUTH2_CLIENT_ID", "Auth:ApiIdentifier", string.Empty);
                 });
 
-                services.AddSingleton<IAuthorizationHandler, JwtHasScopeHandler>();
+                services.AddSingleton<IAuthorizationHandler>(provider => new JwtHasScopeHandler(systemName, objectServiceName));
+
+                _logger.LogInformation("Configured authorization: JWT validation");
             }
             else if (tokenType == TokenType.Bearer)
             {
@@ -189,7 +161,10 @@ namespace Foundation.ObjectService.WebUI
                 {
                     services.AddSingleton<HttpHealthCheck>(provider => new HttpHealthCheck("oauth2-provider", apiGatewayReadinessCheckUri, provider.GetService<IHttpClientFactory>(), 100, 500));
                     healthCheckStatusBuilder.AddCheck<HttpHealthCheck>("oauth2-provider", null, new List<string> { "ready", "oauth2", "api-gateway" });
-                    
+                }
+                else
+                {
+                    _logger.LogWarning("OAuth2 token introspection has been configured, but there is no health check for the OAuth2 token service");
                 }
 
                 services.AddAuthentication(options =>
@@ -200,12 +175,17 @@ namespace Foundation.ObjectService.WebUI
                 .AddTokenAuth(o => { });
 
                 // If we're using bearer tokens, let's use introspection to validate the tokens and their scopes
-                services.AddSingleton<IAuthorizationHandler>(provider => new TokenHasScopeHandler(introspectionUri, provider.GetService<IHttpClientFactory>()));
+                services.AddSingleton<IAuthorizationHandler>(provider => new TokenHasScopeHandler(systemName, objectServiceName, introspectionUri, provider.GetService<IHttpClientFactory>()));
+
+                _logger.LogInformation("Configured authorization: OAuth2 bearer tokens with token introspection");
             }
             else
             {
                 // If the developer has not configured OAuth2, then disable authentication and authorization
                 services.AddSingleton<IAuthorizationHandler, AlwaysAllowHandler>();
+
+                // Log a warning about this
+                _logger.LogWarning("No authorization has been configured, all APIs are open");
             }
         }
 
@@ -241,7 +221,7 @@ namespace Foundation.ObjectService.WebUI
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint(Common.SWAGGER_FILE, "FDNS Object Microservice API V1");
+                c.SwaggerEndpoint(Common.SWAGGER_FILE, "Object Microservice API V1");
             });
 
             app.UseHealthChecks(Common.HEALTH_LIVENESS_ENDPOINT, new HealthCheckOptions
@@ -320,6 +300,53 @@ namespace Foundation.ObjectService.WebUI
                 .HandleTransientHttpError()
                 .CircuitBreakerAsync(5, TimeSpan.FromSeconds(2));
         }
+
+        private void AddSwaggerServices(IServiceCollection services, TokenType tokenType)
+        {
+            services.AddSwaggerGen(c =>
+            {
+                #region Swagger generation
+                c.SwaggerDoc("v1", new Info
+                    {
+                        Title = "Object Microservice API",
+                        Version = "v1",
+                        Description = "A microservice for providing an abstraction layer to a database engine, where HTTP actions are mapped to CRUD operations. Clients of the object service and the underlying database technology may thus change independent of one another provided the API remains consistent.",
+                        Contact = new Contact
+                        {
+                            Name = "Erik Knudsen",
+                            Email = string.Empty,
+                            Url = "https://github.com/erik1066"
+                        },
+                        License = new License
+                        {
+                            Name = "Apache 2.0",
+                            Url = "https://www.apache.org/licenses/LICENSE-2.0"
+                        }
+                    }
+                );
+
+                if (tokenType != TokenType.None)
+                {
+                    c.AddSecurityDefinition("Bearer", new ApiKeyScheme 
+                    { 
+                        In = "header", 
+                        Description = "Please enter Token into field", 
+                        Name = "Authorization", 
+                        Type = "apiKey" 
+                    });
+
+                    c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>> {
+                        { "Bearer", Enumerable.Empty<string>() },
+                    });
+                }
+
+                // These two lines are necessary for Swagger to pick up the C# XML comments and show them in the Swagger UI. See https://github.com/domaindrivendev/Swashbuckle.AspNetCore for more details.
+                var filePath = System.IO.Path.Combine(System.AppContext.BaseDirectory, "api.xml");
+                c.IncludeXmlComments(filePath);
+                #endregion
+            });
+        }
     }
-#pragma warning restore 1591
 }
+
+#pragma warning restore 1591

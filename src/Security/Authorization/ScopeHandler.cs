@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 
@@ -14,6 +15,48 @@ namespace Foundation.ObjectService.Security
         /// Constant representing the word 'scope'
         /// </summary>
         protected const string SCOPE = "scope";
+
+        private readonly string _systemName = string.Empty;
+        private readonly string _serviceName = string.Empty;
+        private static Regex _regex = new Regex(@"^[a-zA-Z0-9_\.]*$");
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="systemName">The name of the system to which the verifying service belongs</param>
+        /// <param name="serviceName">The name of the verifying service</param>
+        public ScopeHandler(string systemName, string serviceName)
+        {
+            #region Input validation
+            if (string.IsNullOrEmpty(systemName))
+            {
+                throw new ArgumentNullException(nameof(systemName));
+            }
+            if (string.IsNullOrEmpty(serviceName))
+            {
+                throw new ArgumentNullException(nameof(serviceName));
+            }
+            if (string.IsNullOrEmpty(systemName.Trim()))
+            {
+                throw new ArgumentException(nameof(systemName));
+            }
+            if (string.IsNullOrEmpty(serviceName.Trim()))
+            {
+                throw new ArgumentException(nameof(serviceName));
+            }
+            if (!_regex.IsMatch(systemName))
+            {
+                throw new ArgumentException(nameof(systemName));
+            }
+            if (!_regex.IsMatch(serviceName))
+            {
+                throw new ArgumentException(nameof(serviceName));
+            }
+            #endregion // Input validation
+
+            _systemName = systemName;
+            _serviceName = serviceName;
+        }
 
         /// <summary>
         /// Determines whether the required scope is present in an OAuth2 scope string
@@ -70,7 +113,7 @@ namespace Foundation.ObjectService.Security
                 i++;
             }
 
-            var scope = $"fdns.object.{db}.{collection}";
+            var scope = $"{_systemName}.{_serviceName}.{db}.{collection}";
             return scope;
         }
     }

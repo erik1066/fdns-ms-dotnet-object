@@ -11,6 +11,15 @@ namespace Foundation.ObjectService.Security
     public sealed class JwtHasScopeHandler : ScopeHandler
     {
         /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="systemName">The name of the system to which the verifying service belongs</param>
+        /// <param name="serviceName">The name of the verifying service</param>
+        public JwtHasScopeHandler(string systemName, string serviceName) 
+            : base(systemName, serviceName)
+        { }
+
+        /// <summary>
         /// Determine if the user's scope claim (if any) matches the URL and HTTP operation they are attempting to carry out
         /// </summary>
         /// <param name="context">Contains authorization information used by Microsoft.AspNetCore.Authorization.IAuthorizationHandler</param>
