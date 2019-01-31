@@ -22,7 +22,7 @@ namespace Foundation.ObjectService.WebUI
     /// <summary>
     /// Health check for a NoSQL database
     /// </summary>
-    public class ObjectDatabaseHealthCheck : IHealthCheck
+    public sealed class ObjectDatabaseHealthCheck : IHealthCheck
     {
         private readonly int _degradationThreshold;
         private readonly int _cancellationThreshold;

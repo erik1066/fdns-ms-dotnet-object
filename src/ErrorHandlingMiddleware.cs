@@ -15,7 +15,7 @@ using Foundation.ObjectService.Exceptions;
 
 namespace Foundation.ObjectService.WebUI
 {
-    public class ErrorHandlingMiddleware
+    public sealed class ErrorHandlingMiddleware
     {
         private readonly RequestDelegate next;
 

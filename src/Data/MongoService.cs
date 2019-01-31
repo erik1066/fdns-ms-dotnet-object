@@ -24,7 +24,7 @@ namespace Foundation.ObjectService.Data
     /// <summary>
     /// Class representing a MongoDB service for arbitrary, untyped Json objects
     /// </summary>
-    public class MongoService : IObjectService
+    public sealed class MongoService : IObjectService
     {
         private readonly IMongoClient _client = null;
         private readonly JsonWriterSettings _jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Strict };

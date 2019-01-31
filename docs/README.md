@@ -1,4 +1,4 @@
-# How to use the FDNS Object Service
+# How to use the Object Service
 
 ## Table of Contents
 - [Running this microservice locally inside a container](#running-this-microservice-locally-inside-a-container)
@@ -413,7 +413,7 @@ Using scopes in this manner allows the Object microservice to be an endpoint for
 
 ### Configuring the service with an OAuth2 provider
 
-The FDNS Object microservice can be configured to one of three authorization modes:
+The Object microservice can be configured to one of three authorization modes:
 
 1. No authorization
 1. JavaScript Web Tokens (also known as JWTs)

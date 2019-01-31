@@ -7,7 +7,7 @@ namespace Foundation.ObjectService.ViewModel
     /// <summary>
     /// Class representing route parameters for the object service
     /// </summary>
-    public class ItemRouteParameters : DatabaseRouteParameters
+    public sealed class ItemRouteParameters : DatabaseRouteParameters
     {
         /// <summary>
         /// The id of the item

@@ -30,7 +30,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
     [SwaggerResponse(401, "HTTP header lacks a valid OAuth2 token")]
     [SwaggerResponse(403, "HTTP header has a valid OAuth2 token but lacks the appropriate scope to use this route")]
     [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
-    public class ObjectController : ControllerBase
+    public sealed class ObjectController : ControllerBase
     {
         private readonly IObjectService _service;
 

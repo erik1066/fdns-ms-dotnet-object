@@ -1,4 +1,4 @@
-# Contributing to fdns-ms-dotnet-object
+# Contributing to this repository
 
 Pull requests are the best way to propose changes to the codebase. We actively welcome your pull requests:
 

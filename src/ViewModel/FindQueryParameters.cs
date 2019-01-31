@@ -7,7 +7,7 @@ namespace Foundation.ObjectService.ViewModel
     /// <summary>
     /// Class representing query parameters for the find operation
     /// </summary>
-    public class FindQueryParameters
+    public sealed class FindQueryParameters
     {
         /// <summary>
         /// The start point for the find operation

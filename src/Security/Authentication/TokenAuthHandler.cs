@@ -17,7 +17,7 @@ namespace Foundation.ObjectService.Security
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // build the claims and put them in "Context"; you need to import the Microsoft.AspNetCore.Authentication package
-            return AuthenticateResult.NoResult();
+            return await Task.Run(() => AuthenticateResult.NoResult());
         }
     }
 #pragma warning restore 1591

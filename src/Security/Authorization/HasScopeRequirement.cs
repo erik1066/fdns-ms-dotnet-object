@@ -6,7 +6,7 @@ namespace Foundation.ObjectService.Security
     /// <summary>
     /// Class representing a set of scopes that an HTTP request must be authorized for
     /// </summary>
-    public class HasScopeRequirement : IAuthorizationRequirement
+    public sealed class HasScopeRequirement : IAuthorizationRequirement
     {
         /// <summary>
         /// The issuer

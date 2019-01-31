@@ -12,7 +12,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 namespace Foundation.ObjectService.WebUI
 {
 #pragma warning disable 1591 // disables the warnings about missing Xml code comments
-    public class HttpHealthCheck : IHealthCheck
+    public sealed class HttpHealthCheck : IHealthCheck
     {
         private readonly string _url;
         private readonly int _degradationThreshold;

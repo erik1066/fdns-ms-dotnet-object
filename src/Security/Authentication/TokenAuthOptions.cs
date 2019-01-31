@@ -8,7 +8,7 @@ namespace Foundation.ObjectService.Security
 {
 
 #pragma warning disable 1591 // disables the warnings about missing Xml code comments
-    public class TokenAuthOptions: AuthenticationSchemeOptions
+    public sealed class TokenAuthOptions: AuthenticationSchemeOptions
     {
         public TokenAuthOptions()
         {
