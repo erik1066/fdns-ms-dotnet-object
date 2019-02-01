@@ -15,47 +15,35 @@ namespace Foundation.ObjectService.Security
         /// Constant representing the word 'scope'
         /// </summary>
         protected const string SCOPE = "scope";
-
-        private readonly string _systemName = string.Empty;
-        private readonly string _serviceName = string.Empty;
         private static Regex _regex = new Regex(@"^[a-zA-Z0-9_\.]*$");
+
+        /// <summary>
+        /// Gets/sets the system name
+        /// </summary>
+        protected string SystemName { get; private set; } = string.Empty;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="systemName">The name of the system to which the verifying service belongs</param>
-        /// <param name="serviceName">The name of the verifying service</param>
-        public ScopeHandler(string systemName, string serviceName)
+        protected ScopeHandler(string systemName)
         {
             #region Input validation
             if (string.IsNullOrEmpty(systemName))
             {
                 throw new ArgumentNullException(nameof(systemName));
             }
-            if (string.IsNullOrEmpty(serviceName))
-            {
-                throw new ArgumentNullException(nameof(serviceName));
-            }
             if (string.IsNullOrEmpty(systemName.Trim()))
             {
                 throw new ArgumentException(nameof(systemName));
-            }
-            if (string.IsNullOrEmpty(serviceName.Trim()))
-            {
-                throw new ArgumentException(nameof(serviceName));
             }
             if (!_regex.IsMatch(systemName))
             {
                 throw new ArgumentException(nameof(systemName));
             }
-            if (!_regex.IsMatch(serviceName))
-            {
-                throw new ArgumentException(nameof(serviceName));
-            }
             #endregion // Input validation
 
-            _systemName = systemName;
-            _serviceName = serviceName;
+            SystemName = systemName;
         }
 
         /// <summary>
@@ -79,42 +67,15 @@ namespace Foundation.ObjectService.Security
         /// </summary>
         /// <param name="resource">Resource from the authorization context</param>
         /// <returns>The scope associated with the specified route</returns>
-        protected string GetScopeFromRoute(Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext resource)
+        protected (string Scope, string[] ScopeParts) GetScopeFromRoute(Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext resource)
         {
-            int dbIndex = 0;
-            int collectionIndex = 0;
-            int i = 0;
-            foreach (var key in resource.RouteData.Values.Keys)
-            {
-                if (key == "db")
-                {
-                    dbIndex = i;
-                }
-                else if (key == "collection")
-                {
-                    collectionIndex = i;
-                }
-                i++;
-            }
+            string service = resource.RouteData.Values.ElementAt(1).Value.ToString().ToLower();
+            string db = resource.RouteData.Values.ElementAt(2).Value.ToString();
+            string collection = resource.RouteData.Values.ElementAt(3).Value.ToString();
 
-            var db = string.Empty;
-            var collection = string.Empty;
-            i = 0;
-            foreach (var value in resource.RouteData.Values.Values)
-            {
-                if (i == dbIndex)
-                {
-                    db = value.ToString();
-                }
-                if (i == collectionIndex)
-                {
-                    collection = value.ToString();
-                }
-                i++;
-            }
-
-            var scope = $"{_systemName}.{_serviceName}.{db}.{collection}";
-            return scope;
+            var scope = $"{SystemName}.{service}.{db}.{collection}";
+            var scopes = new string[4] { SystemName, service, db, collection };
+            return (scope, scopes);
         }
     }
 }

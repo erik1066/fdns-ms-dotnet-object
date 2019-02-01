@@ -33,6 +33,11 @@ namespace Foundation.ObjectService.WebUI.Controllers
     public sealed class ObjectController : ControllerBase
     {
         private readonly IObjectService _service;
+        private const string OBJECT_SERVICE_NAME = "object";
+        private const string READ_PERMISSION = OBJECT_SERVICE_NAME + "_" + Common.READ_AUTHORIZATION_NAME;
+        private const string INSERT_PERMISSION = OBJECT_SERVICE_NAME + "_" + Common.INSERT_AUTHORIZATION_NAME;
+        private const string UPDATE_PERMISSION = OBJECT_SERVICE_NAME + "_" + Common.UPDATE_AUTHORIZATION_NAME;
+        private const string DELETE_PERMISSION = OBJECT_SERVICE_NAME + "_" + Common.DELETE_AUTHORIZATION_NAME;
 
         /// <summary>
         /// Constructor
@@ -53,7 +58,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [HttpGet("{db}/{collection}/{id}")]
         [SwaggerResponse(200, "Object returned successfully")]        
         [SwaggerResponse(404, "The specified object or collection could not be found")]
-        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        [Authorize(READ_PERMISSION)]
         public async Task<IActionResult> GetObject([FromRoute] ItemRouteParameters routeParameters)
         {
             if (!ModelState.IsValid)
@@ -100,7 +105,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(406, "Invalid content type")]
         [SwaggerResponse(413, "The request payload is too large")]
         [SwaggerResponse(415, "Invalid media type")]
-        [Authorize(Common.INSERT_AUTHORIZATION_NAME)]
+        [Authorize(INSERT_PERMISSION)]
         public async Task<IActionResult> InsertObjectWithId([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat)
         {
             if (!ModelState.IsValid)
@@ -158,7 +163,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(406, "Invalid content type")]
         [SwaggerResponse(413, "The request payload is too large")]
         [SwaggerResponse(415, "Invalid media type")]
-        [Authorize(Common.INSERT_AUTHORIZATION_NAME)]
+        [Authorize(INSERT_PERMISSION)]
         public async Task<IActionResult> InsertObjectWithNoId([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
         {
             if (!ModelState.IsValid)
@@ -209,7 +214,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(406, "Invalid content type")]
         [SwaggerResponse(413, "The request payload is too large")]
         [SwaggerResponse(415, "Invalid media type")]
-        [Authorize(Common.UPDATE_AUTHORIZATION_NAME)]
+        [Authorize(UPDATE_PERMISSION)]
         public async Task<IActionResult> ReplaceObject([FromRoute] ItemRouteParameters routeParameters, [FromBody] string json, [FromQuery] ResponseFormat responseFormat = ResponseFormat.EntireObject)
         {
             if (!ModelState.IsValid)
@@ -246,7 +251,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [HttpDelete("{db}/{collection}/{id}")]
         [SwaggerResponse(200, "The object was deleted successfully", typeof(bool))]
         [SwaggerResponse(404, "The specified object or collection could not be found")]
-        [Authorize(Common.DELETE_AUTHORIZATION_NAME)]
+        [Authorize(DELETE_PERMISSION)]
         public async Task<IActionResult> DeleteObject([FromRoute] ItemRouteParameters routeParameters)
         {
             if (!ModelState.IsValid)
@@ -276,7 +281,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [HttpDelete("{db}/{collection}")]
         [SwaggerResponse(200, "The collection was deleted successfully", typeof(bool))]
         [SwaggerResponse(404, "The specified collection could not be found")]
-        [Authorize(Common.DELETE_AUTHORIZATION_NAME)]
+        [Authorize(DELETE_PERMISSION)]
         public async Task<IActionResult> DeleteCollection([FromRoute] DatabaseRouteParameters routeParameters)
         {
             if (!ModelState.IsValid)
@@ -360,7 +365,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(406, "The request body was submitted as something other than text/plain")]
         [SwaggerResponse(413, "The request payload is too large")]
         [SwaggerResponse(415, "Invalid media type")]
-        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        [Authorize(READ_PERMISSION)]
         public async Task<IActionResult> FindObjects([FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters, [FromBody] string findExpression)
         {
             if (!ModelState.IsValid)
@@ -397,7 +402,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [HttpGet("{db}/{collection}/search")]
         [SwaggerResponse(200, "Returns the objects that match the inputs to the search operation")]
         [SwaggerResponse(404, "The specified collection could not be found")]
-        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        [Authorize(READ_PERMISSION)]
         public async Task<IActionResult> SearchObjects([FromQuery] string qs, [FromRoute] DatabaseRouteParameters routeParameters, [FromQuery] FindQueryParameters queryParameters)
         {
             if (!ModelState.IsValid)
@@ -418,7 +423,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [Produces("application/json")]
         [HttpGet("{db}/{collection}")]
         [SwaggerResponse(200, "Returns all objects in the specified collection")]
-        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        [Authorize(READ_PERMISSION)]
         public async Task<IActionResult> GetAllObjectsInCollection([FromRoute] DatabaseRouteParameters routeParameters)
         {
             if (!ModelState.IsValid)
@@ -462,7 +467,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(406, "The request body was submitted as something other than text/plain")]
         [SwaggerResponse(413, "The request payload is too large")]
         [SwaggerResponse(415, "Invalid media type")]
-        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        [Authorize(READ_PERMISSION)]
         public async Task<IActionResult> CountObjects([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string countExpression)
         {
             if (!ModelState.IsValid)
@@ -508,7 +513,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(406, "The request body was submitted as something other than text/plain")]
         [SwaggerResponse(413, "The request payload is too large")]
         [SwaggerResponse(415, "Invalid media type")]
-        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        [Authorize(READ_PERMISSION)]
         public async Task<IActionResult> Distinct([FromRoute] DatabaseRouteParameters routeParameters, [FromRoute] string field, [FromBody] string findExpression)
         {
             if (!ModelState.IsValid)
@@ -566,7 +571,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(406, "The request body was submitted as something other than text/plain")]
         [SwaggerResponse(413, "The request payload is too large")]
         [SwaggerResponse(415, "Invalid media type")]
-        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        [Authorize(READ_PERMISSION)]
         public async Task<IActionResult> Aggregate([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string payload)
         {
             if (!ModelState.IsValid)
@@ -625,7 +630,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(406, "The request body was submitted as something other than application/json")]
         [SwaggerResponse(413, "The request payload is too large")]
         [SwaggerResponse(415, "Invalid media type")]
-        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        [Authorize(READ_PERMISSION)]
         public async Task<IActionResult> MultiInsert([FromRoute] DatabaseRouteParameters routeParameters, [FromBody] string payload)
         {
             if (!ModelState.IsValid)
@@ -652,7 +657,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         [SwaggerResponse(406, "The request body was submitted as something other than application/json")]
         [SwaggerResponse(413, "The request payload is too large")]
         [SwaggerResponse(415, "Invalid media type")]
-        [Authorize(Common.READ_AUTHORIZATION_NAME)]
+        [Authorize(READ_PERMISSION)]
         public async Task<IActionResult> MultiInsertFromCsv([FromRoute] DatabaseRouteParameters routeParameters, IFormFile csv)
         {
             if (!ModelState.IsValid)

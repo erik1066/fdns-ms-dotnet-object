@@ -119,10 +119,10 @@ namespace Foundation.ObjectService.WebUI
              */
             services.AddAuthorization(options =>
             {
-                options.AddPolicy(Common.READ_AUTHORIZATION_NAME, policy => policy.Requirements.Add(new HasScopeRequirement(Common.READ_AUTHORIZATION_NAME, authorizationDomain)));
-                options.AddPolicy(Common.INSERT_AUTHORIZATION_NAME, policy => policy.Requirements.Add(new HasScopeRequirement(Common.INSERT_AUTHORIZATION_NAME, authorizationDomain)));
-                options.AddPolicy(Common.UPDATE_AUTHORIZATION_NAME, policy => policy.Requirements.Add(new HasScopeRequirement(Common.UPDATE_AUTHORIZATION_NAME, authorizationDomain)));
-                options.AddPolicy(Common.DELETE_AUTHORIZATION_NAME, policy => policy.Requirements.Add(new HasScopeRequirement(Common.DELETE_AUTHORIZATION_NAME, authorizationDomain)));
+                options.AddPolicy($"{objectServiceName}_{Common.READ_AUTHORIZATION_NAME}", policy => policy.Requirements.Add(new HasScopeRequirement($"{objectServiceName}_{Common.READ_AUTHORIZATION_NAME}", authorizationDomain)));
+                options.AddPolicy($"{objectServiceName}_{Common.INSERT_AUTHORIZATION_NAME}", policy => policy.Requirements.Add(new HasScopeRequirement($"{objectServiceName}_{Common.INSERT_AUTHORIZATION_NAME}", authorizationDomain)));
+                options.AddPolicy($"{objectServiceName}_{Common.UPDATE_AUTHORIZATION_NAME}", policy => policy.Requirements.Add(new HasScopeRequirement($"{objectServiceName}_{Common.UPDATE_AUTHORIZATION_NAME}", authorizationDomain)));
+                options.AddPolicy($"{objectServiceName}_{Common.DELETE_AUTHORIZATION_NAME}", policy => policy.Requirements.Add(new HasScopeRequirement($"{objectServiceName}_{Common.DELETE_AUTHORIZATION_NAME}", authorizationDomain)));
             });
 
             if (tokenType == TokenType.Jwt)
@@ -138,7 +138,7 @@ namespace Foundation.ObjectService.WebUI
                     options.Audience = Common.GetConfigurationVariable(Configuration, "OAUTH2_CLIENT_ID", "Auth:ApiIdentifier", string.Empty);
                 });
 
-                services.AddSingleton<IAuthorizationHandler>(provider => new JwtHasScopeHandler(systemName, objectServiceName));
+                services.AddSingleton<IAuthorizationHandler>(provider => new JwtHasScopeHandler(systemName));
 
                 _logger.LogInformation("Configured authorization: JWT validation");
             }
@@ -175,7 +175,7 @@ namespace Foundation.ObjectService.WebUI
                 .AddTokenAuth(o => { });
 
                 // If we're using bearer tokens, let's use introspection to validate the tokens and their scopes
-                services.AddSingleton<IAuthorizationHandler>(provider => new TokenHasScopeHandler(systemName, objectServiceName, introspectionUri, provider.GetService<IHttpClientFactory>()));
+                services.AddSingleton<IAuthorizationHandler>(provider => new TokenHasScopeHandler(systemName, introspectionUri, provider.GetService<IHttpClientFactory>()));
 
                 _logger.LogInformation("Configured authorization: OAuth2 bearer tokens with token introspection");
             }

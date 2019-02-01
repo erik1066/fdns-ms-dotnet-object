@@ -22,11 +22,10 @@ namespace Foundation.ObjectService.Security
         /// Constructor
         /// </summary>
         /// <param name="systemName">The name of the system to which the verifying service belongs</param>
-        /// <param name="serviceName">The name of the verifying service</param>
         /// <param name="introspectionUri">The Uri to use for token introspection</param>
         /// <param name="httpClientFactory">HttpClient factory to use for the introspection request</param>
-        public TokenHasScopeHandler(string systemName, string serviceName, string introspectionUri, IHttpClientFactory httpClientFactory) 
-            : base(systemName, serviceName)
+        public TokenHasScopeHandler(string systemName, string introspectionUri, IHttpClientFactory httpClientFactory) 
+            : base(systemName)
         {
             _client = httpClientFactory.CreateClient($"oauth2-provider");
             _introspectionUri = introspectionUri;
@@ -47,6 +46,10 @@ namespace Foundation.ObjectService.Security
                 return;
             }
 
+            var parts = requirement.Scope.Split("_");
+            string serviceName = parts[0];
+            string permission = parts[1];
+
             /* We need to get the dot-separated path to the collection, such as fdns.object.bookstore.customer. This dot-separated
              * path is mapped to an HTTP route: "object" is the name of the servce (the Object microservice), "bookstore" is
              * the database name, and "customer" is the collection, e.g. /api/1.0/bookstore/customer. Before we can authorize
@@ -54,7 +57,15 @@ namespace Foundation.ObjectService.Security
              * via the OAuth2 token. The first step is to get the dot-separated list from the URL, and then we add the
              * create/read/update/delete/etc portion at the end, per the requirement passed into the method call.
              */
-            var requiredScope = $"{GetScopeFromRoute(resource)}.{requirement.Scope}";
+            var scopeFromRoute = GetScopeFromRoute(resource);
+            string requiredScope = $"{scopeFromRoute.Scope}.{permission}";
+
+            if (!serviceName.Equals(scopeFromRoute.ScopeParts[1]) || !SystemName.Equals(scopeFromRoute.ScopeParts[0]))
+            {
+                // the scope doesn't include the proper service name or system name
+                context.Fail();
+                return;
+            }
 
             string responseBody = string.Empty;
             string token = resource.HttpContext.Request.Headers["Authorization"];

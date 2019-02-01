@@ -14,9 +14,8 @@ namespace Foundation.ObjectService.Security
         /// Constructor
         /// </summary>
         /// <param name="systemName">The name of the system to which the verifying service belongs</param>
-        /// <param name="serviceName">The name of the verifying service</param>
-        public JwtHasScopeHandler(string systemName, string serviceName) 
-            : base(systemName, serviceName)
+        public JwtHasScopeHandler(string systemName) 
+            : base(systemName)
         { }
 
         /// <summary>
@@ -34,6 +33,10 @@ namespace Foundation.ObjectService.Security
                 return Task.CompletedTask;
             }
 
+            var parts = requirement.Scope.Split("_");
+            string serviceName = parts[0];
+            string permission = parts[1];
+
             /* We need to get the dot-separated path to the collection, such as fdns.object.bookstore.customer. This dot-separated
              * path is mapped to an HTTP route: "object" is the name of the servce (the Object microservice), "bookstore" is
              * the database name, and "customer" is the collection, e.g. /api/1.0/bookstore/customer. Before we can authorize
@@ -41,11 +44,20 @@ namespace Foundation.ObjectService.Security
              * via the OAuth2 token. The first step is to get the dot-separated list from the URL, and then we add the
              * create/read/update/delete/etc portion at the end, per the requirement passed into the method call.
              */
-            var requiredScope = $"{GetScopeFromRoute(resource)}.{requirement.Scope}";
+            var scopeFromRoute = GetScopeFromRoute(resource);
+            string requiredScope = $"{scopeFromRoute.Scope}.{permission}";
+
+            if (!serviceName.Equals(scopeFromRoute.ScopeParts[1]) || !SystemName.Equals(scopeFromRoute.ScopeParts[0]))
+            {
+                // the scope doesn't include the proper service name or system name
+                context.Fail();
+                return Task.CompletedTask;
+            }
 
             // Just a check to see if the user identity object has a scope claim. If not, something is wrong and exit
             if (!context.User.HasClaim(c => c.Type == SCOPE && c.Issuer == requirement.Issuer))
             {
+                context.Fail();
                 return Task.CompletedTask;
             }
 
@@ -58,6 +70,10 @@ namespace Foundation.ObjectService.Security
             if (HasScope(requiredScope, tokenScopes))
             {
                 context.Succeed(requirement);
+            }
+            else 
+            {
+                context.Fail();
             }
 
             return Task.CompletedTask;
