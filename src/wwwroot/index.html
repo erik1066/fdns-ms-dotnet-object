@@ -40,7 +40,7 @@
     <header>
       <h1>Object Microservice</h1>
       <p><span class="subtitle">
-        A REST backing service for database operations
+        A REST backing service for NoSQL database operations
       </span></p>
     </header>
     <section>
@@ -49,32 +49,28 @@
         <p>
           <ul>
             <li><a href="/swagger/">Live Swagger API documentation</a></li>
-            <li><a href="https://github.com/erik1066/fdns-ms-dotnet-object/blob/master/docs/README.md" target="_blank">Usage guide</a></li>
+            <li><a href="https://github.com/erik1066/fdns-ms-dotnet-object/blob/master/docs/README.md" target="_blank">Developer how-to and usage guide</a></li>
             <li><a href="https://hub.docker.com/r/biohazard501/fdns-ms-dotnet-object" target="_blank">Docker Hub page</a></li>
             <li><a href="https://github.com/erik1066/fdns-ms-dotnet-object" target="_blank">Source code</a></li>
+            <li><a href="/health/ready">Readiness check</a></li>
           </ul>
         </p>
 
       <h2>Purpose</h2>
       <p>
-        "Object" is a backing service with a simple RESTful API for NoSQL database operations. Supported operations include CRUD, search, data pipelines, aggregation, and bulk imports. MongoDB is the underlying database technology. See the <a href='/swagger/'>interactive Swagger documentation</a> for a full list of supported operations.
+        "Object" is a <a href="https://12factor.net/backing-services">backing service</a> with a simple RESTful API for NoSQL database operations. Supported operations include CRUD, search, data pipelines, aggregation, and bulk imports. MongoDB is the underlying database technology. See the <a href='/swagger/'>interactive Swagger documentation</a> for a full list of supported operations.
       </p>
 
-      <p>Backing services are <a href="https://12factor.net/backing-services">factor #4</a> of the 12-factor app methodology. Applied to database operations, the result is that many languages can be used to interact with a Mongo database, even those languages lacking a Mongo SDK. Analysts, data scientists, and developers can learn a simple HTTP REST API to work with the organization's data using the languages and tools of their choice. The Object service can be used as part of a data lake that can serve an entire organization - or as just one component of a smaller application.
-      </p>
       <p>
-        When used as part of a data lake, the Object service provides the following benefits:
+        The Object service provides the following benefits:
         <ul>
-          <li>Centralized data access for the whole organization: Everyone just needs to learn one service endpoint</li>
-          <li>A consistent API: Searching, data aggregation, etc. are by-design going to be consistent regardless of the data source</li>
-          <li>A consistent security protocol: All authenticiation and authorization is handled via OAuth2</li>
+          <li>Language-agnostic: Any language can send and consume HTTP requests. No Mongo SDK is required.</li>
+          <li>Centralized data access for the organization: There's one, easy-to-remember URL</li>
+          <li>Consistent API: Searching, data aggregation, etc. are consistent across data sources by-design</li>
+          <li>Consistent authorization: Authorization is handled via OAuth2 scopes</li>
+          <li>Design simplification: Developers can avoid ORMs and treat CRUD operations as HTTP requests</li>
+          <li>Scalability: As a microservice based on .NET Core, it's efficient, fast, and horizontally scalable</li>
         </ul>
-      </p>
-      <p>
-        The alternative to a data lake is allowing engineering teams to build their own APIs for each of their own services and systems. The result is that there will be hundreds of APIs at many different service endpoints with varying REST implementations and authentication schemes. Organizations can still enforce coherent REST standards and authentication protocols via management practices, but there is real effort in carrying out that enforcement, and the level of effort rises as the organization grows in size. A data lake built as a set of backing services eliminates these problems.
-      </p>
-      <p>
-        The Object service is designed as a microservice so that it can scale rapidly and efficiently when used as part of a data lake.
       </p>
 
     </section>
