@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Foundation.ObjectService.Security
 {
-
 #pragma warning disable 1591 // disables the warnings about missing Xml code comments
     public sealed class TokenAuthOptions: AuthenticationSchemeOptions
     {

@@ -13,6 +13,7 @@ docker-build:
 		--build-arg OBJECT_PROXY_HOSTNAME= \
 		--build-arg OBJECT_IMMUTABLE= \
 		--build-arg OAUTH2_ACCESS_TOKEN_URI= \
+		--build-arg OAUTH2_READINESS_CHECK_URI= \
 		--build-arg OAUTH2_CLIENT_ID= \
 		--build-arg OAUTH2_CLIENT_SECRET= \
 		.

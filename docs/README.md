@@ -439,3 +439,9 @@ OAUTH2_ACCESS_TOKEN_URI=http://localhost:4445/oauth2/introspect
 ```
 
 Bearer tokens don't contain the scopes associated with the token. The microservice will call the introspection endpoint on each HTTP request. The introspection response will contain the scopes associated with the token.
+
+If your OAuth2 provider has a readiness check endpoint, you can include it in this microservice's readiness check at `health/ready`. For example:
+
+```
+OAUTH2_READINESS_CHECK_URI=http://localhost:4445/health/ready
+```
