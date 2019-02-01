@@ -35,6 +35,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Foundation.Sdk" Version="0.0.8" />
+
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
@@ -51,9 +53,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="4.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="4.0.1" />
-    <PackageReference Include="MongoDB.Driver" Version="2.7.2" />
-    <PackageReference Include="MongoDB.Driver.Core" Version="2.7.2" />
-    <PackageReference Include="MongoDB.Bson" Version="2.7.2" />
+    <PackageReference Include="MongoDB.Driver" Version="2.7.3" />
+    <PackageReference Include="MongoDB.Driver.Core" Version="2.7.3" />
+    <PackageReference Include="MongoDB.Bson" Version="2.7.3" />
     <PackageReference Include="ChoETL.NETStandard" Version="1.0.2.3" />    
 
     <PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />

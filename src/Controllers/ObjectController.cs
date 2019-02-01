@@ -404,7 +404,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var findExpression = SearchStringConverter.BuildQuery(qs);
+            var findExpression = Foundation.Sdk.Converters.SearchStringConverter.BuildFindExpressionFromQuery(qs);
             var findResults = await _service.FindAsync(routeParameters.DatabaseName, routeParameters.CollectionName, findExpression, queryParameters.Start, queryParameters.Limit, queryParameters.SortFieldName, System.ComponentModel.ListSortDirection.Ascending);
             return Ok(findResults);
         }

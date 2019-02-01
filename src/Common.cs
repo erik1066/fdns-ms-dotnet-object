@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
 using Foundation.ObjectService.Data;
-using Foundation.ObjectService.Security;
+using Foundation.Sdk.Security;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Foundation.ObjectService

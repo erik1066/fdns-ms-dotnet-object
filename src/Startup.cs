@@ -32,7 +32,7 @@ using MongoDB.Driver;
 using Polly;
 using Polly.Extensions.Http;
 using Foundation.ObjectService.Data;
-using Foundation.ObjectService.Security;
+using Foundation.Sdk.Security;
 
 namespace Foundation.ObjectService.WebUI
 {
@@ -52,7 +52,6 @@ namespace Foundation.ObjectService.WebUI
         public void ConfigureServices(IServiceCollection services)
         {
             string systemName = Common.GetConfigurationVariable(Configuration, "SYSTEM_NAME", "SystemName", string.Empty);
-            string objectServiceName = Common.GetConfigurationVariable(Configuration, "OBJECT_SERVICE_NAME", "ObjectServiceName", string.Empty);            
 
             string authorizationDomain = Common.GetConfigurationVariable(Configuration, "OAUTH2_AUTH_DOMAIN", "Auth:Domain", string.Empty);
             string introspectionUri = Common.GetConfigurationVariable(Configuration, "OAUTH2_ACCESS_TOKEN_URI", "Auth:IntrospectUrl", string.Empty);
