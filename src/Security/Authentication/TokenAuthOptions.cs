@@ -11,9 +11,7 @@ namespace Foundation.ObjectService.Security
     public sealed class TokenAuthOptions: AuthenticationSchemeOptions
     {
         public TokenAuthOptions()
-        {
-
-        }
+        { }
     }
 #pragma warning restore 1591
 }
