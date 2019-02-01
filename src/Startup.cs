@@ -119,10 +119,10 @@ namespace Foundation.ObjectService.WebUI
              */
             services.AddAuthorization(options =>
             {
-                options.AddPolicy($"{objectServiceName}_{Common.READ_AUTHORIZATION_NAME}", policy => policy.Requirements.Add(new HasScopeRequirement($"{objectServiceName}_{Common.READ_AUTHORIZATION_NAME}", authorizationDomain)));
-                options.AddPolicy($"{objectServiceName}_{Common.INSERT_AUTHORIZATION_NAME}", policy => policy.Requirements.Add(new HasScopeRequirement($"{objectServiceName}_{Common.INSERT_AUTHORIZATION_NAME}", authorizationDomain)));
-                options.AddPolicy($"{objectServiceName}_{Common.UPDATE_AUTHORIZATION_NAME}", policy => policy.Requirements.Add(new HasScopeRequirement($"{objectServiceName}_{Common.UPDATE_AUTHORIZATION_NAME}", authorizationDomain)));
-                options.AddPolicy($"{objectServiceName}_{Common.DELETE_AUTHORIZATION_NAME}", policy => policy.Requirements.Add(new HasScopeRequirement($"{objectServiceName}_{Common.DELETE_AUTHORIZATION_NAME}", authorizationDomain)));
+                options.AddPolicy($"fdns.object.*.*.read", policy => policy.Requirements.Add(new HasScopeRequirement($"fdns.object.*.*.read", authorizationDomain)));
+                options.AddPolicy($"fdns.object.*.*.insert", policy => policy.Requirements.Add(new HasScopeRequirement($"fdns.object.*.*.insert", authorizationDomain)));
+                options.AddPolicy($"fdns.object.*.*.update", policy => policy.Requirements.Add(new HasScopeRequirement($"fdns.object.*.*.update", authorizationDomain)));
+                options.AddPolicy($"fdns.object.*.*.delete", policy => policy.Requirements.Add(new HasScopeRequirement($"fdns.object.*.*.delete", authorizationDomain)));
             });
 
             if (tokenType == TokenType.Jwt)

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Foundation.ObjectService.Security
@@ -27,6 +28,16 @@ namespace Foundation.ObjectService.Security
         {
             Scope = scope ?? throw new ArgumentNullException(nameof(scope));
             Issuer = issuer ?? throw new ArgumentNullException(nameof(issuer));
+        }
+        
+        /// <summary>
+        /// Gets the named pieces of the dot-delimted scope
+        /// </summary>
+        /// <returns>Strings representing each of the scope parts</returns>
+        public (string SystemName, string ServiceName, string Outer, string Inner, string Permission) GetScopeParts()
+        {
+            var parts = this.Scope.Split('.');
+            return (parts[0], parts[1], parts.Length > 2 ? parts[2] : "", parts.Length > 3 ? parts[3] : "", parts.Last());
         }
     }
 }

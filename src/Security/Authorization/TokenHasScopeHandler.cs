@@ -46,9 +46,10 @@ namespace Foundation.ObjectService.Security
                 return;
             }
 
-            var parts = requirement.Scope.Split("_");
-            string serviceName = parts[0];
-            string permission = parts[1];
+            var parts = requirement.GetScopeParts();
+            string systemName = parts.SystemName;
+            string serviceName = parts.ServiceName;
+            string permission = parts.Permission;
 
             /* We need to get the dot-separated path to the collection, such as fdns.object.bookstore.customer. This dot-separated
              * path is mapped to an HTTP route: "object" is the name of the servce (the Object microservice), "bookstore" is
