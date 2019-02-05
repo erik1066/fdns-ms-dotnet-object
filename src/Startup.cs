@@ -56,6 +56,9 @@ namespace Foundation.ObjectService.WebUI
             string authorizationDomain = Common.GetConfigurationVariable(Configuration, "OAUTH2_AUTH_DOMAIN", "Auth:Domain", string.Empty);
             string introspectionUri = Common.GetConfigurationVariable(Configuration, "OAUTH2_ACCESS_TOKEN_URI", "Auth:IntrospectUrl", string.Empty);
             string apiGatewayReadinessCheckUri = Common.GetConfigurationVariable(Configuration, "OAUTH2_READINESS_CHECK_URI", "Auth:ReadinessCheckUrl", string.Empty);
+
+            string objectHealthCheckDatabaseName = Common.GetConfigurationVariable(Configuration, "OBJECT_HEALTH_CHECK_DATABASE_NAME", "Health:DatabaseName", "_healthcheckdatabase_");
+            string objectHealthCheckCollectionName = Common.GetConfigurationVariable(Configuration, "OBJECT_HEALTH_CHECK_COLLECTION_NAME", "Health:CollectionName", "_healthcheckcollection_");
             
             var tokenType = TokenType.None;
 
@@ -91,7 +94,7 @@ namespace Foundation.ObjectService.WebUI
                     .AllowCredentials());
             });
 
-            var mongoConnectionString = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_CONNECTION_STRING", "MongoDB:ConnectionString", "mongodb://localhost:27017");
+            string mongoConnectionString = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_CONNECTION_STRING", "MongoDB:ConnectionString", "mongodb://localhost:27017");
             string mongoUseSsl = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_USE_SSL", "MongoDB:UseSsl", "false");
 
             MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl(mongoConnectionString));
@@ -108,7 +111,12 @@ namespace Foundation.ObjectService.WebUI
             services.AddSingleton<IMongoClient>(provider => new MongoClient(settings));
             services.AddSingleton<IObjectService>(provider => new MongoService(provider.GetService<IMongoClient>(), provider.GetService<ILogger<MongoService>>(), GetImmutableCollections()));
 
-            services.AddSingleton<ObjectDatabaseHealthCheck>(provider => new ObjectDatabaseHealthCheck("Database", provider.GetService<IObjectService>()));
+            services.AddSingleton<ObjectDatabaseHealthCheck>(provider => new ObjectDatabaseHealthCheck(
+                description: "Database", 
+                service: provider.GetService<IObjectService>(), 
+                databaseName: objectHealthCheckDatabaseName, 
+                collectionName: objectHealthCheckCollectionName));
+
             IHealthChecksBuilder healthCheckStatusBuilder = services.AddHealthChecks()
                 .AddCheck<ObjectDatabaseHealthCheck>("database", null, new List<string> { "ready", "mongo", "db" });
 

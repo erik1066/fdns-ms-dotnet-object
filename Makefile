@@ -11,6 +11,8 @@ docker-build:
 		--build-arg OBJECT_FLUENTD_PORT=24224 \
 		--build-arg OBJECT_PROXY_HOSTNAME= \
 		--build-arg OBJECT_IMMUTABLE= \
+		--build-arg OBJECT_HEALTH_CHECK_DATABASE_NAME=_healthcheckdatabase_ \
+		--build-arg OBJECT_HEALTH_CHECK_COLLECTION_NAME=_healthcheckcollection_ \
 		--build-arg OAUTH2_ACCESS_TOKEN_URI= \
 		--build-arg OAUTH2_READINESS_CHECK_URI= \
 		--build-arg OAUTH2_CLIENT_ID= \
@@ -29,7 +31,7 @@ docker-start:
 docker-stop:
 	docker stop fdns-ms-dotnet-object_main || true
 	docker rm fdns-ms-dotnet-object_main || true
-	docker-compose down
+	docker-compose down --volume
 
 docker-restart:
 	make docker-stop 2>/dev/null || true
@@ -56,7 +58,7 @@ run-integration-tests:
 	sleep 7
 	dotnet clean
 	dotnet test tests/integration/Foundation.ObjectService.IntegrationTests.csproj || true
-	docker-compose --file tests/integration/docker-compose.yml down
+	docker-compose --file tests/integration/docker-compose.yml down --volume
 
 # Performance tests
 run-performance-tests:
@@ -67,7 +69,7 @@ run-performance-tests:
 	printf '\n'
 	ab -p tests/performance/resources/001.json -T application/json -c 2 -n 1000 http://localhost:9090/api/1.0/bookstore/books
 	printf '\n'
-	docker-compose --file tests/performance/docker-compose.yml down
+	docker-compose --file tests/performance/docker-compose.yml down --volume
 
 # Security tests
 run-security-tests:
@@ -96,7 +98,7 @@ run-security-tests:
 		--client-secret secret > ./tests/security/resources/token-update-delete 2>&1
 	dotnet clean
 	dotnet test tests/security/Foundation.ObjectService.SecurityTests.csproj || true
-	docker-compose --file tests/security/docker-compose.yml down
+	docker-compose --file tests/security/docker-compose.yml down --volume
 
 # SonarQube
 sonar-up:
@@ -113,7 +115,7 @@ sonar-start:
 	dotnet sonarscanner begin /k:"fdns-ms-dotnet-object" || true
 	dotnet test --collect:"Code Coverage"
 	dotnet sonarscanner end || true
-	docker-compose down
+	docker-compose down --volume
 
 sonar-stop: sonar-down
 sonar-down:

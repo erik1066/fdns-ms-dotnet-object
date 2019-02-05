@@ -29,6 +29,9 @@ namespace Foundation.ObjectService.WebUI.Tests
 {
     public class ObjectHealthCheckTests
     {
+        public static string DatabaseName = "_healthcheckdatabase_";
+        public static string CollectionName = "_healthcheckcollection_";
+
         [Theory]
         [InlineData("description", 1000, 2000)]
         [InlineData("unit-test", 1, 2)]
@@ -38,7 +41,7 @@ namespace Foundation.ObjectService.WebUI.Tests
             Mock<IObjectService> mockObjectService = new Mock<IObjectService>();
 
             // act
-            var check = new ObjectDatabaseHealthCheck(description, mockObjectService.Object, degredationThreshold, cancellationThreshold);
+            var check = new ObjectDatabaseHealthCheck(description, mockObjectService.Object, DatabaseName, CollectionName, degredationThreshold, cancellationThreshold);
 
             // assert
             Assert.True(true);
@@ -53,7 +56,7 @@ namespace Foundation.ObjectService.WebUI.Tests
             Mock<IObjectService> mockObjectService = new Mock<IObjectService>();
 
             // act
-            Action act = () => new ObjectDatabaseHealthCheck(description, mockObjectService.Object, 100, 200);
+            Action act = () => new ObjectDatabaseHealthCheck(description, mockObjectService.Object, DatabaseName, CollectionName, 100, 200);
 
             // assert
             Assert.Throws<ArgumentNullException>(act);
@@ -63,7 +66,7 @@ namespace Foundation.ObjectService.WebUI.Tests
         public void Construct_Fail_Null_Service()
         {
             // act
-            Action act = () => new ObjectDatabaseHealthCheck("unit-tests", null, 100, 200);
+            Action act = () => new ObjectDatabaseHealthCheck("unit-tests", null, DatabaseName, CollectionName, 100, 200);
 
             // assert
             Assert.Throws<ArgumentNullException>(act);
@@ -76,7 +79,7 @@ namespace Foundation.ObjectService.WebUI.Tests
             Mock<IObjectService> mockObjectService = new Mock<IObjectService>();
 
             // act
-            Action act = () => new ObjectDatabaseHealthCheck("unit-tests", mockObjectService.Object, -1, 200);
+            Action act = () => new ObjectDatabaseHealthCheck("unit-tests", mockObjectService.Object, DatabaseName, CollectionName, -1, 200);
 
             // assert
             Assert.Throws<ArgumentOutOfRangeException>(act);
@@ -89,7 +92,7 @@ namespace Foundation.ObjectService.WebUI.Tests
             Mock<IObjectService> mockObjectService = new Mock<IObjectService>();
 
             // act
-            Action act = () => new ObjectDatabaseHealthCheck("unit-tests", mockObjectService.Object, 100, -5);
+            Action act = () => new ObjectDatabaseHealthCheck("unit-tests", mockObjectService.Object, DatabaseName, CollectionName, 100, -5);
 
             // assert
             Assert.Throws<ArgumentOutOfRangeException>(act);
@@ -102,7 +105,7 @@ namespace Foundation.ObjectService.WebUI.Tests
             Mock<IObjectService> mockObjectService = new Mock<IObjectService>();
 
             // act
-            Action act = () => new ObjectDatabaseHealthCheck("unit-tests", mockObjectService.Object, 100, 50);
+            Action act = () => new ObjectDatabaseHealthCheck("unit-tests", mockObjectService.Object, DatabaseName, CollectionName, 100, 50);
 
             // assert
             Assert.Throws<InvalidOperationException>(act);
@@ -113,11 +116,11 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             // arrange
             Mock<IObjectService> mockObjectService = new Mock<IObjectService>();
-            mockObjectService.Setup(o => o.DeleteAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1)).ReturnsAsync(true);
-            mockObjectService.Setup(o => o.InsertAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1, "{ 'name' : 'the nameless ones' }")).ReturnsAsync(string.Empty);
-            mockObjectService.Setup(o => o.GetAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1)).ReturnsAsync(string.Empty);
+            mockObjectService.Setup(o => o.DeleteAsync(DatabaseName, CollectionName, 1)).ReturnsAsync(true);
+            mockObjectService.Setup(o => o.InsertAsync(DatabaseName, CollectionName, 1, "{ 'name' : 'the nameless ones' }")).ReturnsAsync(string.Empty);
+            mockObjectService.Setup(o => o.GetAsync(DatabaseName, CollectionName, 1)).ReturnsAsync(string.Empty);
 
-            var check = new ObjectDatabaseHealthCheck("unittests-1", mockObjectService.Object, 120_000, 150_000);
+            var check = new ObjectDatabaseHealthCheck("unittests-1", mockObjectService.Object, DatabaseName, CollectionName, 120_000, 150_000);
             var context = new HealthCheckContext();
 
             // act
@@ -132,17 +135,17 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             // arrange
             Mock<IObjectService> mockObjectService = new Mock<IObjectService>();
-            mockObjectService.Setup(o => o.DeleteAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1))
+            mockObjectService.Setup(o => o.DeleteAsync(DatabaseName, CollectionName, 1))
             .Returns( async () => 
             { 
                 await Task.Run(() => System.Threading.Thread.Sleep(100));
                 return true;
             });
 
-            mockObjectService.Setup(o => o.InsertAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1, "{ 'name' : 'the nameless ones' }")).ReturnsAsync(string.Empty);
-            mockObjectService.Setup(o => o.GetAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1)).ReturnsAsync(string.Empty);
+            mockObjectService.Setup(o => o.InsertAsync(DatabaseName, CollectionName, 1, "{ 'name' : 'the nameless ones' }")).ReturnsAsync(string.Empty);
+            mockObjectService.Setup(o => o.GetAsync(DatabaseName, CollectionName, 1)).ReturnsAsync(string.Empty);
 
-            var check = new ObjectDatabaseHealthCheck("unittests-1", mockObjectService.Object, 1, 150_000);
+            var check = new ObjectDatabaseHealthCheck("unittests-1", mockObjectService.Object, DatabaseName, CollectionName, 1, 150_000);
             var context = new HealthCheckContext();
 
             // act
@@ -192,11 +195,11 @@ namespace Foundation.ObjectService.WebUI.Tests
         {
             // arrange
             Mock<IObjectService> mockObjectService = new Mock<IObjectService>();
-            mockObjectService.Setup(o => o.DeleteAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1)).ThrowsAsync(new InvalidOperationException("test-exception"));
-            mockObjectService.Setup(o => o.InsertAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1, "{ 'name' : 'the nameless ones' }")).ReturnsAsync(string.Empty);
-            mockObjectService.Setup(o => o.GetAsync(ObjectDatabaseHealthCheck.DummyDatabaseName, ObjectDatabaseHealthCheck.DummyCollectionName, 1)).ReturnsAsync(string.Empty);
+            mockObjectService.Setup(o => o.DeleteAsync(DatabaseName, CollectionName, 1)).ThrowsAsync(new InvalidOperationException("test-exception"));
+            mockObjectService.Setup(o => o.InsertAsync(DatabaseName, CollectionName, 1, "{ 'name' : 'the nameless ones' }")).ReturnsAsync(string.Empty);
+            mockObjectService.Setup(o => o.GetAsync(DatabaseName, CollectionName, 1)).ReturnsAsync(string.Empty);
 
-            var check = new ObjectDatabaseHealthCheck("unittests-1", mockObjectService.Object, 1, 2);
+            var check = new ObjectDatabaseHealthCheck("unittests-1", mockObjectService.Object, DatabaseName, CollectionName, 1, 2);
             var context = new HealthCheckContext();
 
             // act

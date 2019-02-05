@@ -32,21 +32,23 @@ namespace Foundation.ObjectService.WebUI
         /// <summary>
         /// Name of the dummy database to use for checks
         /// </summary>
-        public const string DummyDatabaseName = "_healthcheckdatabase_";
+        public string DatabaseName { get; private set; } = "_healthcheckdatabase_";
 
         /// <summary>
         /// Name of the dummy collection in the dummy database to use for checks
         /// </summary>
-        public const string DummyCollectionName = "_healthcheckcollection_";
+        public string CollectionName { get; private set; } = "_healthcheckcollection_";
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="description">Description of the health check</param>
         /// <param name="service">The NoSQL object service to use for the check</param>
+        /// <param name="databaseName">Name of the database to use for checks</param>
+        /// <param name="collectionName">Name of the collection in the dummy database to use for checks</param>
         /// <param name="degradationThreshold">The threshold in milliseconds after which to consider the database degraded</param>
         /// <param name="cancellationThreshold">The threshold in milliseconds after which to cancel the check and consider the database unavailable</param>
-        public ObjectDatabaseHealthCheck(string description, IObjectService service, int degradationThreshold = 1000, int cancellationThreshold = 2000)
+        public ObjectDatabaseHealthCheck(string description, IObjectService service, string databaseName, string collectionName, int degradationThreshold = 1000, int cancellationThreshold = 2000)
         {
             #region Input validation
             if (string.IsNullOrEmpty(description))
@@ -56,6 +58,14 @@ namespace Foundation.ObjectService.WebUI
             if (service == null)
             {
                 throw new ArgumentNullException(nameof(service));
+            }
+            if (string.IsNullOrEmpty(databaseName))
+            {
+                throw new ArgumentNullException(nameof(databaseName));
+            }
+            if (string.IsNullOrEmpty(collectionName))
+            {
+                throw new ArgumentNullException(nameof(collectionName));
             }
             if (degradationThreshold < 0)
             {
@@ -73,6 +83,8 @@ namespace Foundation.ObjectService.WebUI
 
             _description = description;
             _service = service;
+            DatabaseName = databaseName;
+            CollectionName = collectionName;
             _degradationThreshold = degradationThreshold;
             _cancellationThreshold = cancellationThreshold;
         }
@@ -97,9 +109,9 @@ namespace Foundation.ObjectService.WebUI
                     var sw = new Stopwatch();
                     sw.Start();
 
-                    await _service.DeleteAsync(DummyDatabaseName, DummyCollectionName, 1);
-                    await _service.InsertAsync(DummyDatabaseName, DummyCollectionName, 1, "{ 'name' : 'the nameless ones' }");
-                    await _service.GetAsync(DummyDatabaseName, DummyCollectionName, 1);
+                    await _service.DeleteAsync(DatabaseName, CollectionName, 1);
+                    await _service.InsertAsync(DatabaseName, CollectionName, 1, "{ 'name' : 'the nameless ones' }");
+                    await _service.GetAsync(DatabaseName, CollectionName, 1);
 
                     sw.Stop();
                     var elapsed = sw.Elapsed.TotalMilliseconds.ToString("N0");
