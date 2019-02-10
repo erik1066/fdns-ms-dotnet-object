@@ -80,7 +80,7 @@ run-security-tests:
 	docker exec -it security_hydra_1 \
 		hydra clients create \
 		--endpoint http://localhost:4445 \
-		--scope "fdns.object.bookstore.books.read fdns.object.bookstore.books.insert fdns.object.bookstore.books.update fdns.object.bookstore.books.delete" \
+		--scope "fdns.object.bookstore.*.* fdns.object.bookstore.books.read fdns.object.bookstore.books.insert fdns.object.bookstore.books.update fdns.object.bookstore.books.delete" \
 		--id my-client \
 		--secret secret \
 		-g client_credentials
@@ -96,6 +96,12 @@ run-security-tests:
 		--scope "fdns.object.bookstore.books.update fdns.object.bookstore.books.delete" \
 		--client-id my-client \
 		--client-secret secret > ./tests/security/resources/token-update-delete 2>&1
+	docker exec -it `docker ps -f name=security_hydra_1 -q` \
+		hydra token client \
+		--endpoint http://localhost:4444 \
+		--scope "fdns.object.bookstore.*.*" \
+		--client-id my-client \
+		--client-secret secret > ./tests/security/resources/token-bookstore-all-all 2>&1
 	dotnet clean
 	dotnet test tests/security/Foundation.ObjectService.SecurityTests.csproj || true
 	docker-compose --file tests/security/docker-compose.yml down --volume
