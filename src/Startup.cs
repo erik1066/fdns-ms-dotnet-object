@@ -115,7 +115,9 @@ namespace Foundation.ObjectService.WebUI
                 description: "Database", 
                 service: provider.GetService<IObjectService>(), 
                 databaseName: objectHealthCheckDatabaseName, 
-                collectionName: objectHealthCheckCollectionName));
+                collectionName: objectHealthCheckCollectionName,
+                shouldCreateFakeObject: true,
+                id: "1"));
 
             IHealthChecksBuilder healthCheckStatusBuilder = services.AddHealthChecks()
                 .AddCheck<ObjectDatabaseHealthCheck>("database", null, new List<string> { "ready", "mongo", "db" });
