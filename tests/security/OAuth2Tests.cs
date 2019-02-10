@@ -18,6 +18,7 @@ namespace Foundation.ObjectService.SecurityTests
         private readonly WebApplicationFactory<Foundation.ObjectService.WebUI.Startup> _factory;
         private readonly string _tokenReadInsert = string.Empty;
         private readonly string _tokenUpdateDelete = string.Empty;
+        private readonly string _tokenBookstoreAllAll = string.Empty;
 
         public OAuth2Tests(WebApplicationFactory<Foundation.ObjectService.WebUI.Startup> factory)
         {
@@ -35,6 +36,9 @@ namespace Foundation.ObjectService.SecurityTests
 
             var updateDeletePath = Path.Combine(basePath, "resources", "token-update-delete");
             _tokenUpdateDelete = File.ReadAllText(updateDeletePath).Trim();
+
+            var bookstoreAllAllPath = Path.Combine(basePath, "resources", "token-bookstore-all-all");
+            _tokenBookstoreAllAll = File.ReadAllText(bookstoreAllAllPath).Trim();
         }
 
         private void InsertOneRecord()
@@ -52,6 +56,8 @@ namespace Foundation.ObjectService.SecurityTests
                 }
             }
         }
+
+        #region explicit tests
 
         /// <summary>
         /// Checks to see whether unprotected endpoints are accessible with no authorization
@@ -161,6 +167,134 @@ namespace Foundation.ObjectService.SecurityTests
                 Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
             }
         }
+
+        #endregion
+        
+        #region Star tests
+
+        /// <summary>
+        /// Checks to see whether an endpoint can be accessed on READ with the appropriate *.* scopes
+        /// </summary>
+        /// <param name="url">URL to be accessed</param>
+        [Theory]
+        [InlineData("/api/1.0/bookstore/books/1")]
+        public void Valid_Bookstore_All_All_Token_Read(string url)
+        {
+            InsertOneRecord();
+
+            // Arrange
+            var client = _factory.CreateClient();
+            client.DefaultRequestHeaders.Add("Authorization", $"{_tokenBookstoreAllAll}");
+
+            // Act
+            using (HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, url))
+            {
+                var response = client.SendAsync(message).Result;
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+        }
+
+        /// <summary>
+        /// Checks to see whether an endpoint can be accessed on INSERT with the appropriate *.* scopes
+        /// </summary>
+        /// <param name="url">URL to be accessed</param>
+        [Theory]
+        [InlineData("/api/1.0/bookstore/orders6535")]
+        public void Valid_Bookstore_All_All_Token_Insert(string url)
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            client.DefaultRequestHeaders.Add("Authorization", $"{_tokenBookstoreAllAll}");
+
+            // Act
+            using (HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, url))
+            {
+                message.Content = new StringContent("{ \"identifier\": 32 }", System.Text.Encoding.UTF8, "application/json");
+
+                var response = client.SendAsync(message).Result;
+
+                // Assert
+                Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            }
+        }
+
+        /// <summary>
+        /// Checks to see whether an endpoint can be accessed on UPDATE with the appropriate *.* scopes
+        /// </summary>
+        /// <param name="url">URL to be accessed</param>
+        [Theory]
+        [InlineData("/api/1.0/bookstore/books/1")]
+        public void Valid_Bookstore_All_All_Token_Update(string url)
+        {
+            InsertOneRecord();
+
+            // Arrange
+            var client = _factory.CreateClient();
+            client.DefaultRequestHeaders.Add("Authorization", $"{_tokenBookstoreAllAll}");
+
+            // Act
+            using (HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Put, url))
+            {
+                message.Content = new StringContent("{ \"identifier\": 32 }", System.Text.Encoding.UTF8, "application/json");
+
+                var response = client.SendAsync(message).Result;
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+        }
+
+                /// <summary>
+        /// Checks to see whether an endpoint can be accessed on UPDATE with the appropriate *.* scopes
+        /// </summary>
+        /// <param name="url">URL to be accessed</param>
+        [Theory]
+        [InlineData("/api/1.0/bookstore/books/1")]
+        public void Valid_Bookstore_All_All_Token_Delete(string url)
+        {
+            InsertOneRecord();
+
+            // Arrange
+            var client = _factory.CreateClient();
+            client.DefaultRequestHeaders.Add("Authorization", $"{_tokenBookstoreAllAll}");
+
+            // Act
+            using (HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Delete, url))
+            {
+                var response = client.SendAsync(message).Result;
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+        }
+
+        /// <summary>
+        /// Checks to see whether an endpoint cannot be accessed on READ with *.* scopes due to a mismatched database name
+        /// </summary>
+        /// <param name="url">URL to be accessed</param>
+        [Theory]
+        [InlineData("/api/1.0/coffeeshop/orders/1")]
+        [InlineData("/api/1.0/hardwarestore/orders/abcd")]
+        [InlineData("/api/1.0/postoffice/orders/431")]
+        public void Valid_All_All_Read_Token_with_invalid_database(string url)
+        {
+            // Arrange
+            var client = _factory.CreateClient();
+            client.DefaultRequestHeaders.Add("Authorization", $"{_tokenBookstoreAllAll}");
+
+            // Act
+            using (HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, url))
+            {
+                var response = client.SendAsync(message).Result;
+
+                // Assert
+                Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+            }
+        }
+        
+        #endregion
 
         // void IDisposable.Dispose()
         // {
