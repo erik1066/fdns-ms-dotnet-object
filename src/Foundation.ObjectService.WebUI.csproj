@@ -16,8 +16,8 @@
     <PackageProjectUrl>https://github.com/erik1066/fdns-ms-dotnet-object</PackageProjectUrl>
     <RepositoryUrl>https://github.com/erik1066/fdns-ms-dotnet-object</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageVersion>0.0.3</PackageVersion>
-    <Version>0.0.3</Version>
+    <PackageVersion>0.0.4</PackageVersion>
+    <Version>0.0.4</Version>
     <IsTestProject>false</IsTestProject>
     <DebugType>Full</DebugType>
   </PropertyGroup>

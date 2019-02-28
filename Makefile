@@ -9,7 +9,6 @@ docker-build:
 		--build-arg OBJECT_MONGO_USE_SSL=false \
 		--build-arg OBJECT_FLUENTD_HOST=fluentd \
 		--build-arg OBJECT_FLUENTD_PORT=24224 \
-		--build-arg OBJECT_PROXY_HOSTNAME= \
 		--build-arg OBJECT_IMMUTABLE= \
 		--build-arg OBJECT_HEALTH_CHECK_DATABASE_NAME=_healthcheckdatabase_ \
 		--build-arg OBJECT_HEALTH_CHECK_COLLECTION_NAME=_healthcheckcollection_ \
