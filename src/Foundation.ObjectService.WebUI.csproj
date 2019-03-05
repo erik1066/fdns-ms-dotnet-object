@@ -19,7 +19,6 @@
     <PackageVersion>0.0.4</PackageVersion>
     <Version>0.0.4</Version>
     <IsTestProject>false</IsTestProject>
-    <DebugType>Full</DebugType>
   </PropertyGroup>
 
   <!-- These two property groups are necessary for Swagger to pick up the C# XML comments and show them in the Swagger UI. -->
