@@ -9,7 +9,7 @@ WORKDIR /src
 RUN dotnet publish -c Release
 
 # Run stage
-FROM mcr.microsoft.com/dotnet/core/aspnet:2.2.2-alpine3.8 as run
+FROM mcr.microsoft.com/dotnet/core/runtime:2.2.2-alpine3.8 as run
 
 RUN apk update && apk upgrade --no-cache
 
