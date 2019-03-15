@@ -665,14 +665,12 @@ namespace Foundation.ObjectService.WebUI.Controllers
             if (csv.Length > 0)
             {
                 using (var reader = new System.IO.StreamReader(csv.OpenReadStream()))
+                using (var csvReader = new ChoCSVReader(reader)
+                    .WithFirstLineHeader())
                 {
-                    using (var csvReader = new ChoCSVReader(reader)
-                        .WithFirstLineHeader())
+                    foreach (var row in csvReader) 
                     {
-                        foreach (var row in csvReader) 
-                        {
-                            rows.Add(row.DumpAsJson());
-                        }
+                        rows.Add(row.DumpAsJson());
                     }
                 }
 
