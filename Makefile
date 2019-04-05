@@ -72,6 +72,7 @@ run-performance-tests:
 
 # Security tests
 run-security-tests:
+	mkdir ./tests/security/resources || true
 	docker-compose --file tests/security/docker-compose.yml up --detach
 	printf 'Wait for Hydra\n'
 	until `curl --output /dev/null --silent --fail --connect-timeout 80 http://localhost:4445/health/ready`; do printf '.'; sleep 1; done
