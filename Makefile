@@ -55,6 +55,7 @@ run-unit-tests:
 run-integration-tests:
 	docker-compose --file tests/integration/docker-compose.yml up --detach
 	sleep 7
+	dotnet restore
 	dotnet clean
 	dotnet test tests/integration/Foundation.ObjectService.IntegrationTests.csproj || true
 	docker-compose --file tests/integration/docker-compose.yml down --volume
@@ -102,6 +103,7 @@ run-security-tests:
 		--scope "fdns.object.bookstore.*.*" \
 		--client-id my-client \
 		--client-secret secret > ./tests/security/resources/token-bookstore-all-all 2>&1
+	dotnet restore
 	dotnet clean
 	dotnet test tests/security/Foundation.ObjectService.SecurityTests.csproj || true
 	docker-compose --file tests/security/docker-compose.yml down --volume
