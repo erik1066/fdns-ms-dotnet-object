@@ -121,6 +121,6 @@ namespace Foundation.ObjectService.Data
         /// <returns>bool; whether or not the collection eixsts</returns>
         Task<bool> DoesCollectionExist(string databaseName, string collectionName);
 
-        
+
     }
 }

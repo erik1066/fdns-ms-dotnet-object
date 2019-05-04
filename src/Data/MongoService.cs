@@ -71,7 +71,7 @@ namespace Foundation.ObjectService.Data
             {
                 var database = GetDatabase(databaseName);
                 var collection = GetCollection(database, collectionName);
-                
+
                 (var isObjectId, ObjectId objectId) = IsObjectId(id.ToString());
                 BsonDocument findDocument = isObjectId ? new BsonDocument(ID_PROPERTY_NAME, objectId) : new BsonDocument(ID_PROPERTY_NAME, id.ToString());
                 return StringifyDocument(await collection.Find(findDocument).FirstOrDefaultAsync());
@@ -129,7 +129,7 @@ namespace Foundation.ObjectService.Data
                 if (id != null)
                 {
                     (var isObjectId, ObjectId objectId) = IsObjectId(id.ToString());
-                    
+
                     if (isObjectId)
                     {
                         document.Set("_id", objectId);
@@ -139,7 +139,7 @@ namespace Foundation.ObjectService.Data
                         document.Set("_id", id.ToString());
                     }
                 }
-                
+
                 await collection.InsertOneAsync(document);
                 id = document.GetValue("_id");
                 return await GetAsync(databaseName, collectionName, id);
@@ -274,7 +274,7 @@ namespace Foundation.ObjectService.Data
                 var database = GetDatabase(databaseName);
                 bool collectionExists = await DoesCollectionExist(database, collectionName);
 
-                if (collectionExists) 
+                if (collectionExists)
                 {
                     await database.DropCollectionAsync(collectionName);
                     return true;
@@ -366,7 +366,7 @@ namespace Foundation.ObjectService.Data
                 FilterDefinition<BsonDocument> filterDefinition = bsonDocument;
 
                 var distinctResults = await collection.DistinctAsync<string>(fieldName, filterDefinition, null);
-                
+
                 var items = distinctResults.ToList();
                 var jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Strict };
                 var stringifiedDocument = items.ToJson(jsonWriterSettings);
@@ -394,13 +394,13 @@ namespace Foundation.ObjectService.Data
             var pipeline = new List<BsonDocument>();
 
             var pipelineOperations = ParseJsonArray(aggregationExpression);
-            foreach(var operation in pipelineOperations)
+            foreach (var operation in pipelineOperations)
             {
                 BsonDocument document = BsonDocument.Parse(operation);
                 pipeline.Add(document);
             }
 
-            var result = (await collection.AggregateAsync<BsonDocument> (pipeline)).ToList();
+            var result = (await collection.AggregateAsync<BsonDocument>(pipeline)).ToList();
 
             var jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.Strict };
             var stringifiedDocument = result.ToJson(jsonWriterSettings);
@@ -423,13 +423,13 @@ namespace Foundation.ObjectService.Data
             var documents = new List<BsonDocument>();
 
             JArray array = JArray.Parse(jsonArray);
-            foreach(JObject o in array.Children<JObject>())
+            foreach (JObject o in array.Children<JObject>())
             {
                 var json = o.ToString();
                 BsonDocument document = BsonDocument.Parse(json);
                 documents.Add(document);
             }
-            
+
             await collection.InsertManyAsync(documents);
 
             List<string> ids = new List<string>();
@@ -536,7 +536,7 @@ namespace Foundation.ObjectService.Data
         private async Task<bool> DoesCollectionExist(IMongoDatabase database, string collectionName)
         {
             var filter = new BsonDocument("name", collectionName);
-            var collectionCursor = await database.ListCollectionsAsync(new ListCollectionsOptions {Filter = filter});
+            var collectionCursor = await database.ListCollectionsAsync(new ListCollectionsOptions { Filter = filter });
             var exists = await collectionCursor.AnyAsync();
             return exists;
         }

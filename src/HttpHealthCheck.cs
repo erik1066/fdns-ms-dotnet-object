@@ -72,7 +72,7 @@ namespace Foundation.ObjectService.WebUI
                 var sw = new Stopwatch();
                 sw.Start();
 
-                try 
+                try
                 {
                     HttpStatusCode status;
                     bool isSuccessCode = false;
@@ -98,7 +98,7 @@ namespace Foundation.ObjectService.WebUI
                             data: new Dictionary<string, object> { ["elapsed"] = elapsed },
                             description: $"{_description} liveness probe took more than {_degradationThreshold} milliseconds");
                     }
-                    else 
+                    else
                     {
                         checkResult = HealthCheckResult.Healthy(
                             data: new Dictionary<string, object> { ["elapsed"] = elapsed },

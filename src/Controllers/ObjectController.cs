@@ -51,7 +51,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// <returns>Object that has the matching id</returns>
         [Produces("application/json")]
         [HttpGet("{db}/{collection}/{id}")]
-        [SwaggerResponse(200, "Object returned successfully")]        
+        [SwaggerResponse(200, "Object returned successfully")]
         [SwaggerResponse(404, "The specified object or collection could not be found")]
         [Authorize("fdns.object.*.*.read")]
         public async Task<IActionResult> GetObject([FromRoute] ItemRouteParameters routeParameters)
@@ -111,7 +111,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
 
             if (responseFormat == ResponseFormat.OnlyId)
             {
-                document = GetInsertedJsonResult(new string [] { routeParameters.Id }).ToString();
+                document = GetInsertedJsonResult(new string[] { routeParameters.Id }).ToString();
             }
             return CreatedAtAction(nameof(GetObject), new { id = routeParameters.Id, db = routeParameters.DatabaseName, collection = routeParameters.CollectionName }, document);
         }
@@ -166,12 +166,12 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return BadRequest(ModelState);
             }
 
-            string document = await _service.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, null, json);            
+            string document = await _service.InsertAsync(routeParameters.DatabaseName, routeParameters.CollectionName, null, json);
             string id = GetObjectId(document);
 
             if (responseFormat == ResponseFormat.OnlyId)
             {
-                document = GetInsertedJsonResult(new string [] { id }).ToString();
+                document = GetInsertedJsonResult(new string[] { id }).ToString();
             }
             return CreatedAtAction(nameof(GetObject), new { id = id, db = routeParameters.DatabaseName, collection = routeParameters.CollectionName }, document);
         }
@@ -216,7 +216,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            
+
             string document = await _service.ReplaceAsync(routeParameters.DatabaseName, routeParameters.CollectionName, routeParameters.Id, json);
 
             if (string.IsNullOrEmpty(document))
@@ -227,10 +227,10 @@ namespace Foundation.ObjectService.WebUI.Controllers
             if (responseFormat == ResponseFormat.OnlyId)
             {
                 string id = GetObjectId(document);
-                document = GetReplacedJsonResult(new string [] { id }).ToString();
+                document = GetReplacedJsonResult(new string[] { id }).ToString();
                 return Ok(document);
             }
-            else 
+            else
             {
                 return Ok(document);
             }
@@ -431,7 +431,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
             {
                 return CollectionNotFound(routeParameters.CollectionName);
             }
-            
+
             var findResults = await _service.GetAllAsync(routeParameters.DatabaseName, routeParameters.CollectionName);
             return Ok(findResults);
         }
@@ -661,14 +661,14 @@ namespace Foundation.ObjectService.WebUI.Controllers
             }
 
             List<string> rows = new List<string>();
-            
+
             if (csv.Length > 0)
             {
                 using (var reader = new System.IO.StreamReader(csv.OpenReadStream()))
                 using (var csvReader = new ChoCSVReader(reader)
                     .WithFirstLineHeader())
                 {
-                    foreach (var row in csvReader) 
+                    foreach (var row in csvReader)
                     {
                         rows.Add(row.DumpAsJson());
                     }
@@ -685,14 +685,14 @@ namespace Foundation.ObjectService.WebUI.Controllers
             }
         }
 
-        private JObject GetInsertedJsonResult(string [] results) => new JObject(
-            new JProperty("inserted", results.Length), 
-            new JProperty("ids", 
+        private JObject GetInsertedJsonResult(string[] results) => new JObject(
+            new JProperty("inserted", results.Length),
+            new JProperty("ids",
                 new JArray(results)));
 
-        private JObject GetReplacedJsonResult(string [] results) => new JObject(
-            new JProperty("updated", results.Length), 
-            new JProperty("ids", 
+        private JObject GetReplacedJsonResult(string[] results) => new JObject(
+            new JProperty("updated", results.Length),
+            new JProperty("ids",
                 new JArray(results)));
 
         private string GetObjectId(string document)
@@ -712,7 +712,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
 
         private IActionResult BadRequestDetail(string message)
         {
-            return StatusCode(400, new ProblemDetails() 
+            return StatusCode(400, new ProblemDetails()
             {
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
                 Title = "Bad Request",
@@ -723,23 +723,23 @@ namespace Foundation.ObjectService.WebUI.Controllers
 
         private IActionResult ObjectNotFound(string id, string collectionName)
         {
-            return StatusCode(404, new ProblemDetails() 
+            return StatusCode(404, new ProblemDetails()
             {
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
                 Title = "Not Found",
                 Status = 404,
-                Detail = $"Object '{id}' does not exist in collection '{collectionName}'" 
+                Detail = $"Object '{id}' does not exist in collection '{collectionName}'"
             });
         }
 
         private IActionResult CollectionNotFound(string collectionName)
         {
-            return StatusCode(404, new ProblemDetails() 
+            return StatusCode(404, new ProblemDetails()
             {
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
                 Title = "Not Found",
                 Status = 404,
-                Detail = $"Collection '{collectionName}' does not exist" 
+                Detail = $"Collection '{collectionName}' does not exist"
             });
         }
     }

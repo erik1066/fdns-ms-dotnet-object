@@ -9,7 +9,7 @@ namespace Foundation.ObjectService.Exceptions
     {
         public string ExceptionMessage { get; set; }
 
-        protected ImmutableCollectionException(SerializationInfo info, StreamingContext context) : base (info, context) { }
+        protected ImmutableCollectionException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
         public ImmutableCollectionException() : base() { }
 

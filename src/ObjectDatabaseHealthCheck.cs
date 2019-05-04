@@ -114,50 +114,50 @@ namespace Foundation.ObjectService.WebUI
             var cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.CancelAfter(_cancellationThreshold);
 
-            var t = Task.Factory.StartNew( async () =>
-            {
-                HealthCheckResult checkResult;
+            var t = Task.Factory.StartNew(async () =>
+           {
+               HealthCheckResult checkResult;
 
-                try 
-                {
-                    var sw = new Stopwatch();
-                    sw.Start();
+               try
+               {
+                   var sw = new Stopwatch();
+                   sw.Start();
 
-                    if (_shouldCreateFakeObject)
-                    {
-                        await _service.DeleteAsync(DatabaseName, CollectionName, Id);
-                        await _service.InsertAsync(DatabaseName, CollectionName, Id, "{ 'name' : 'the nameless ones' }");
-                    }
-                    await _service.GetAsync(DatabaseName, CollectionName, Id);
+                   if (_shouldCreateFakeObject)
+                   {
+                       await _service.DeleteAsync(DatabaseName, CollectionName, Id);
+                       await _service.InsertAsync(DatabaseName, CollectionName, Id, "{ 'name' : 'the nameless ones' }");
+                   }
+                   await _service.GetAsync(DatabaseName, CollectionName, Id);
 
-                    sw.Stop();
-                    var elapsed = sw.Elapsed.TotalMilliseconds.ToString("N0");
+                   sw.Stop();
+                   var elapsed = sw.Elapsed.TotalMilliseconds.ToString("N0");
 
-                    if (sw.Elapsed.TotalMilliseconds > _degradationThreshold)
-                    {
-                        checkResult = HealthCheckResult.Degraded(
-                            data: new Dictionary<string, object> { ["elapsed"] = elapsed },
-                            description: $"{_description} liveness check took more than {_degradationThreshold} milliseconds");
-                    }
-                    else 
-                    {
-                        checkResult = HealthCheckResult.Healthy(
-                            data: new Dictionary<string, object> { ["elapsed"] = elapsed },
-                            description: $"{_description} liveness check completed in {elapsed} milliseconds");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    checkResult = HealthCheckResult.Unhealthy(
-                        data: new Dictionary<string, object> { ["exceptionType"] = ex.GetType().ToString() },
-                        description: $"{_description} liveness check failed due to exception");
-                }
+                   if (sw.Elapsed.TotalMilliseconds > _degradationThreshold)
+                   {
+                       checkResult = HealthCheckResult.Degraded(
+                           data: new Dictionary<string, object> { ["elapsed"] = elapsed },
+                           description: $"{_description} liveness check took more than {_degradationThreshold} milliseconds");
+                   }
+                   else
+                   {
+                       checkResult = HealthCheckResult.Healthy(
+                           data: new Dictionary<string, object> { ["elapsed"] = elapsed },
+                           description: $"{_description} liveness check completed in {elapsed} milliseconds");
+                   }
+               }
+               catch (Exception ex)
+               {
+                   checkResult = HealthCheckResult.Unhealthy(
+                       data: new Dictionary<string, object> { ["exceptionType"] = ex.GetType().ToString() },
+                       description: $"{_description} liveness check failed due to exception");
+               }
 
-                return checkResult;
+               return checkResult;
 
-            }, cancellationTokenSource.Token, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default).Unwrap();
+           }, cancellationTokenSource.Token, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default).Unwrap();
 
-            try 
+            try
             {
                 t.Wait(cancellationTokenSource.Token);
             }
