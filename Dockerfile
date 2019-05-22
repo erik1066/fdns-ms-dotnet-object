@@ -1,5 +1,5 @@
 # Build stage
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2.204-alpine3.9 as build
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2.300-alpine3.9 as build
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT true
 
