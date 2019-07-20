@@ -1,23 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 
-using MongoDB.Bson;
-using MongoDB.Bson.IO;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
-using MongoDB.Driver.Core;
-using Mongo2Go;
 using Xunit;
-using Moq;
-using Microsoft.Extensions.Logging;
-using Foundation.ObjectService.Data;
 using Foundation.ObjectService.WebUI.Controllers;
 using Foundation.ObjectService.ViewModel;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Foundation.ObjectService.WebUI.Tests
@@ -36,7 +25,9 @@ namespace Foundation.ObjectService.WebUI.Tests
             var collectionName = "orders1";
 
             // Try getting items in the collection. Collection doesn't exist yet, should get a 404
-            var getFirstCollectionResult = await controller.GetAllObjectsInCollection(new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName });
+            var getFirstCollectionResult = await controller.GetAllObjectsInCollection(
+                new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName },
+                new PaginationQueryParameters { Start = 0, Limit = Int32.MaxValue });
             ObjectResult getFirstCollectionMvcResult = ((ObjectResult)getFirstCollectionResult);
             Assert.Equal(404, getFirstCollectionMvcResult.StatusCode);
 
@@ -44,7 +35,9 @@ namespace Foundation.ObjectService.WebUI.Tests
             var insertResult = await controller.InsertObjectWithId(new ItemRouteParameters() { DatabaseName = DATABASE_NAME, CollectionName = collectionName, Id = id }, json, ResponseFormat.OnlyId);
 
             // // Try getting items in collection a 2nd time. Now it should return a 200.
-            var getSecondCollectionResult = await controller.GetAllObjectsInCollection(new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName });
+            var getSecondCollectionResult = await controller.GetAllObjectsInCollection(
+                new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName },
+                new PaginationQueryParameters { Start = 0, Limit = Int32.MaxValue });
             OkObjectResult getSecondCollectionMvcResult = ((OkObjectResult)getSecondCollectionResult);
             Assert.Equal(200, getSecondCollectionMvcResult.StatusCode);
 
@@ -54,7 +47,9 @@ namespace Foundation.ObjectService.WebUI.Tests
             Assert.Equal(200, deleteCollectionMvcResult.StatusCode);
 
             // Try getting items in collection a 3rd time. It was just deleted so we should get a 404.
-            var getThirdCollectionResult = await controller.GetAllObjectsInCollection(new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName });
+            var getThirdCollectionResult = await controller.GetAllObjectsInCollection(
+                new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName },
+                new PaginationQueryParameters { Start = 0, Limit = Int32.MaxValue });
             ObjectResult getThirdCollectionMvcResult = ((ObjectResult)getThirdCollectionResult);
             Assert.Equal(404, getThirdCollectionMvcResult.StatusCode);
         }
@@ -103,7 +98,9 @@ namespace Foundation.ObjectService.WebUI.Tests
             Assert.Equal(items.Count, insertedItemsCount); // test that all inserts worked as expected
 
             // Try getting items in collection
-            var getCollectionResult = await controller.GetAllObjectsInCollection(new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName });
+            var getCollectionResult = await controller.GetAllObjectsInCollection(
+                new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName },
+                new PaginationQueryParameters { Start = 0, Limit = Int32.MaxValue });
             var getCollectionMvcResult = ((OkObjectResult)getCollectionResult);
             Assert.Equal(200, getCollectionMvcResult.StatusCode);
 
@@ -154,7 +151,9 @@ namespace Foundation.ObjectService.WebUI.Tests
             Assert.Equal(200, insertManyMvcResult.StatusCode);
 
             // Try getting items in collection
-            var getCollectionResult = await controller.GetAllObjectsInCollection(new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName });
+            var getCollectionResult = await controller.GetAllObjectsInCollection(
+                new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName },
+                new PaginationQueryParameters { Start = 0, Limit = Int32.MaxValue });
             var getCollectionMvcResult = ((OkObjectResult)getCollectionResult);
             Assert.Equal(200, getCollectionMvcResult.StatusCode);
 
@@ -206,7 +205,9 @@ namespace Foundation.ObjectService.WebUI.Tests
             }
 
             // Try getting items in collection
-            var getCollectionResult = await controller.GetAllObjectsInCollection(new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName });
+            var getCollectionResult = await controller.GetAllObjectsInCollection(
+                new DatabaseRouteParameters { DatabaseName = DATABASE_NAME, CollectionName = collectionName },
+                new PaginationQueryParameters { Start = 0, Limit = Int32.MaxValue });
             var getCollectionMvcResult = ((ObjectResult)getCollectionResult);
             Assert.Equal(404, getCollectionMvcResult.StatusCode);
         }

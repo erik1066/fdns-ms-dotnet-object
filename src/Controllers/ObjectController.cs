@@ -411,12 +411,15 @@ namespace Foundation.ObjectService.WebUI.Controllers
         /// Gets all objects in a collection
         /// </summary>
         /// <param name="routeParameters">Required route parameters needed for the find operation</param>
+        /// <param name="queryParameters">Additional optional parameters to use for pagination</param>
         /// <returns>Array of objects in the specified collection</returns>
         [Produces("application/json")]
         [HttpGet("{db}/{collection}")]
         [SwaggerResponse(200, "Returns all objects in the specified collection")]
         [Authorize("fdns.object.*.*.read")]
-        public async Task<IActionResult> GetAllObjectsInCollection([FromRoute] DatabaseRouteParameters routeParameters)
+        public async Task<IActionResult> GetAllObjectsInCollection(
+            [FromRoute] DatabaseRouteParameters routeParameters, 
+            [FromQuery] PaginationQueryParameters queryParameters)
         {
             if (!ModelState.IsValid)
             {
@@ -429,7 +432,7 @@ namespace Foundation.ObjectService.WebUI.Controllers
                 return CollectionNotFound(routeParameters.CollectionName);
             }
 
-            var findResults = await _service.GetAllAsync(routeParameters.DatabaseName, routeParameters.CollectionName);
+            var findResults = await _service.GetAllAsync(routeParameters.DatabaseName, routeParameters.CollectionName, queryParameters.Start, queryParameters.Limit);
             return Ok(findResults);
         }
 

@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 using MongoDB.Bson;
-using MongoDB.Bson.IO;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
-using MongoDB.Driver.Core;
 using Mongo2Go;
 using Xunit;
 using Moq;
@@ -17,7 +14,6 @@ using Microsoft.Extensions.Logging;
 using Foundation.ObjectService.Data;
 using Foundation.ObjectService.WebUI.Controllers;
 using Foundation.ObjectService.ViewModel;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Foundation.ObjectService.WebUI.Tests
