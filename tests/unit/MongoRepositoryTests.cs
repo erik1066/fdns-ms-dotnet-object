@@ -1,17 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using MongoDB.Bson;
-using MongoDB.Bson.IO;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
-using MongoDB.Driver.Core;
 using Mongo2Go;
 using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
 using Foundation.ObjectService.Data;
+using Newtonsoft.Json.Linq;
+using System.Linq;
 
 namespace Foundation.ObjectService.WebUI.Tests
 {
@@ -188,6 +185,57 @@ namespace Foundation.ObjectService.WebUI.Tests
                 Assert.IsAssignableFrom<Exception>(ex);
             }
         }
+
+        [Theory]
+        [InlineData(0, -15, 5)]
+        [InlineData(0, -1, 5)]
+        [InlineData(0, 0, 5)]
+        [InlineData(0, 1, 1)]
+        [InlineData(0, 3, 3)]
+        [InlineData(0, 4, 4)]
+        [InlineData(0, 5, 5)]
+        [InlineData(0, 7, 5)]
+        [InlineData(3, 1, 1)]
+        [InlineData(2, 2, 2)]
+        [InlineData(3, 5, 2)]
+        [InlineData(4, 5, 1)]
+        [InlineData(5, 5, 0)]
+        public async Task Get_All_Objects_Success(int start, int size, int expectedCount)
+        {
+            MongoService repo = new MongoService(_mongoFixture.MongoClient, _mongoFixture.Logger, new Dictionary<string, HashSet<string>>());
+
+            var collection = "users" + System.Guid.NewGuid().ToString().Replace("-", string.Empty);
+            
+            var items = new List<string> 
+            { 
+                "{ \"Name\" : \"Mary\" }", 
+                "{ \"Name\" : \"John\" }", 
+                "{ \"Name\" : \"Kate\" }", 
+                "{ \"Name\" : \"Mark\" }", 
+                "{ \"Name\" : \"Sara\" }" 
+            };
+            
+            // insert all five items
+            foreach (var item in items)
+            {
+                var insertResult = await repo.InsertAsync("bookstore", collection, null, item);
+            }
+
+            // get all the items just inserted
+            var getAllResult = await repo.GetAllAsync("bookstore", collection, start, size);
+
+            var o = JArray.Parse(getAllResult);
+
+            var jArray = JArray.Parse(getAllResult);
+            var users = jArray.Select(jt => jt.ToObject<User>()).ToList();
+
+            Assert.Equal(expectedCount, users.Count);
+        }
+    }
+
+    public class User
+    {
+        public string Name { get; set; }
     }
 
     public class MongoRepositoryFixture : IDisposable

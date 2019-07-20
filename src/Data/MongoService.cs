@@ -83,14 +83,33 @@ namespace Foundation.ObjectService.Data
         /// </summary>
         /// <param name="databaseName">The database name</param>
         /// <param name="collectionName">The collection name</param>
+        /// <param name="start">Optional; the starting index at which to start getting objects</param>
+        /// <param name="size">Optinal; the number of objects to limit the result set to. If set to 0 or less than 0, then no size limit will be used.</param>
         /// <returns>All objects in the collection</returns>
-        public async Task<string> GetAllAsync(string databaseName, string collectionName)
+        public async Task<string> GetAllAsync(string databaseName, string collectionName, int start = 0, int size = -1)
         {
+            #region Input Validation
+            if (start < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(start));
+            }
+            #endregion // Input Validation
+            
+            if (size < 0)
+            {
+                size = Int32.MaxValue;
+            }
+
             try
             {
                 var database = GetDatabase(databaseName);
                 var collection = GetCollection(database, collectionName);
-                var documents = await collection.Find(_ => true).ToListAsync();
+                var documents = await collection
+                    .Find(_ => true)
+                    .Skip(start)
+                    .Limit(size)
+                    .ToListAsync();
+                    
                 return StringifyDocuments(documents);
             }
             catch (Exception ex)
