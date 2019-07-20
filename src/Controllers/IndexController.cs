@@ -1,8 +1,4 @@
-using System;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Runtime.InteropServices;
-using System.Reflection;
 
 namespace Foundation.ObjectService.WebUI.Controllers
 {

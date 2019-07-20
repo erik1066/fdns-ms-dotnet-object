@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 using Foundation.ObjectService.Data;
-using Foundation.ObjectService.Exceptions;
 using Foundation.ObjectService.ViewModel;
 
 using Newtonsoft.Json.Linq;
