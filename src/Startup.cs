@@ -21,6 +21,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 
+using Microsoft.OpenApi.Models;
+
 using Swashbuckle.AspNetCore.Swagger;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -34,12 +36,12 @@ namespace Foundation.ObjectService.WebUI
 {
     public class Startup
     {
-        private readonly ILogger _logger;
+        //private readonly ILogger _logger;
 
-        public Startup(IConfiguration configuration, ILoggerFactory loggerFactory)
+        public Startup(IConfiguration configuration/*, ILoggerFactory loggerFactory*/)
         {
             Configuration = configuration;
-            _logger = loggerFactory.CreateLogger<Startup>();
+            //_logger = loggerFactory.CreateLogger<Startup>();
         }
 
         public IConfiguration Configuration { get; }
@@ -69,25 +71,24 @@ namespace Foundation.ObjectService.WebUI
             
             AddSwaggerServices(services, tokenType);
 
-            services.AddMvc(options =>
+            services.AddControllers(options =>
             {
-               options.InputFormatters.Insert(0, new TextPlainInputFormatter());
-               options.InputFormatters.Insert(0, new JsonRawInputFormatter());
-               options.OutputFormatters.Insert(0, new JsonRawOutputFormatter());
+                options.InputFormatters.Insert(0, new TextPlainInputFormatter());
+                options.InputFormatters.Insert(0, new JsonRawInputFormatter());
+                options.OutputFormatters.Insert(0, new JsonRawOutputFormatter());
             })
             .AddJsonOptions(options =>
             {
-                options.SerializerSettings.Formatting = Newtonsoft.Json.Formatting.Indented;
-            })
-            .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+                options.JsonSerializerOptions.WriteIndented = true;
+            });
 
             services.AddCors(options =>
             {
-                options.AddPolicy("CorsPolicy",
-                    builder => builder.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials());
+            options.AddPolicy("CorsPolicy",
+                builder => builder.AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
+                    //.AllowCredentials());
             });
 
             string mongoConnectionString = Common.GetConfigurationVariable(Configuration, "OBJECT_MONGO_CONNECTION_STRING", "MongoDB:ConnectionString", "mongodb://localhost:27017");
@@ -101,22 +102,22 @@ namespace Foundation.ObjectService.WebUI
             }
             else
             {
-                _logger.LogWarning("MongoDB connection is not using SSL");
+                //_logger.LogWarning("MongoDB connection is not using SSL");
             }
 
             services.AddSingleton<IMongoClient>(provider => new MongoClient(settings));
             services.AddSingleton<IObjectService>(provider => new MongoService(provider.GetService<IMongoClient>(), provider.GetService<ILogger<MongoService>>(), GetImmutableCollections()));
 
-            services.AddSingleton<ObjectDatabaseHealthCheck>(provider => new ObjectDatabaseHealthCheck(
-                description: "Database", 
-                service: provider.GetService<IObjectService>(), 
-                databaseName: objectHealthCheckDatabaseName, 
-                collectionName: objectHealthCheckCollectionName,
-                shouldCreateFakeObject: true,
-                id: "1"));
+            //services.AddSingleton<ObjectDatabaseHealthCheck>(provider => new ObjectDatabaseHealthCheck(
+            //    description: "Database", 
+            //    service: provider.GetService<IObjectService>(), 
+            //    databaseName: objectHealthCheckDatabaseName, 
+            //    collectionName: objectHealthCheckCollectionName,
+            //    shouldCreateFakeObject: true,
+            //    id: "1"));
 
-            IHealthChecksBuilder healthCheckStatusBuilder = services.AddHealthChecks()
-                .AddCheck<ObjectDatabaseHealthCheck>("database", null, new List<string> { "ready", "mongo", "db" });
+            //IHealthChecksBuilder healthCheckStatusBuilder = services.AddHealthChecks()
+            //    .AddCheck<ObjectDatabaseHealthCheck>("database", null, new List<string> { "ready", "mongo", "db" });
 
             /* These policy names match the names in the [Authorize] attribute(s) in the Controller classes.
              * The HasScopeHandler class is used (see below) to pass/fail the authorization check if authorization
@@ -145,7 +146,7 @@ namespace Foundation.ObjectService.WebUI
 
                 services.AddSingleton<IAuthorizationHandler>(provider => new JwtHasScopeHandler(systemName));
 
-                _logger.LogInformation("Configured authorization: JWT validation");
+                //_logger.LogInformation("Configured authorization: JWT validation");
             }
             else if (tokenType == TokenType.Bearer)
             {
@@ -162,15 +163,15 @@ namespace Foundation.ObjectService.WebUI
                 .AddPolicyHandler(GetCircuitBreakerPolicy()); // sets a circuit breaker so that after several failed requests, we just stop sending those requests
 
                 // add health checks for the OAuth2 API gateway
-                if (!string.IsNullOrEmpty(apiGatewayReadinessCheckUri)) 
-                {
-                    services.AddSingleton<HttpHealthCheck>(provider => new HttpHealthCheck("oauth2-provider", apiGatewayReadinessCheckUri, provider.GetService<IHttpClientFactory>(), 100, 500));
-                    healthCheckStatusBuilder.AddCheck<HttpHealthCheck>("oauth2-provider", null, new List<string> { "ready", "oauth2", "api-gateway" });
-                }
-                else
-                {
-                    _logger.LogWarning("OAuth2 token introspection has been configured, but there is no health check for the OAuth2 token service");
-                }
+                //if (!string.IsNullOrEmpty(apiGatewayReadinessCheckUri)) 
+                //{
+                //    services.AddSingleton<HttpHealthCheck>(provider => new HttpHealthCheck("oauth2-provider", apiGatewayReadinessCheckUri, provider.GetService<IHttpClientFactory>(), 100, 500));
+                //    healthCheckStatusBuilder.AddCheck<HttpHealthCheck>("oauth2-provider", null, new List<string> { "ready", "oauth2", "api-gateway" });
+                //}
+                //else
+                //{
+                //    _logger.LogWarning("OAuth2 token introspection has been configured, but there is no health check for the OAuth2 token service");
+                //}
 
                 services.AddAuthentication(options =>
                 {
@@ -182,7 +183,7 @@ namespace Foundation.ObjectService.WebUI
                 // If we're using bearer tokens, let's use introspection to validate the tokens and their scopes
                 services.AddSingleton<IAuthorizationHandler>(provider => new TokenHasScopeHandler(systemName, introspectionUri, provider.GetService<IHttpClientFactory>()));
 
-                _logger.LogInformation("Configured authorization: OAuth2 bearer tokens with token introspection");
+                //_logger.LogInformation("Configured authorization: OAuth2 bearer tokens with token introspection");
             }
             else
             {
@@ -190,7 +191,7 @@ namespace Foundation.ObjectService.WebUI
                 services.AddSingleton<IAuthorizationHandler, AlwaysAllowHandler>();
 
                 // Log a warning about this
-                _logger.LogWarning("No authorization has been configured, all APIs are open");
+                //_logger.LogWarning("No authorization has been configured, all APIs are open");
             }
         }
 
@@ -219,6 +220,7 @@ namespace Foundation.ObjectService.WebUI
             }
 
             app.UseHttpsRedirection();
+            app.UseRouting();
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
@@ -229,45 +231,50 @@ namespace Foundation.ObjectService.WebUI
                 c.SwaggerEndpoint(Common.SWAGGER_FILE, "Object Microservice API V1");
             });
 
-            app.UseHealthChecks(Common.HEALTH_LIVENESS_ENDPOINT, new HealthCheckOptions
-            {
-                // Exclude all checks, just return a 200.
-                Predicate = (check) => false,
-                AllowCachingResponses = false
-            });
+            //app.UseHealthChecks(Common.HEALTH_LIVENESS_ENDPOINT, new HealthCheckOptions
+            //{
+            //    // Exclude all checks, just return a 200.
+            //    Predicate = (check) => false,
+            //    AllowCachingResponses = false
+            //});
 
-            app.UseHealthChecks(Common.HEALTH_READINESS_ENDPOINT, new HealthCheckOptions
-            {
-                Predicate = (check) => check.Tags.Contains("ready"),
-                ResponseWriter = WriteResponse,
-                AllowCachingResponses = false,
+            //app.UseHealthChecks(Common.HEALTH_READINESS_ENDPOINT, new HealthCheckOptions
+            //{
+            //    Predicate = (check) => check.Tags.Contains("ready"),
+            //    ResponseWriter = WriteResponse,
+            //    AllowCachingResponses = false,
 
-                ResultStatusCodes =
-                {
-                    [HealthStatus.Healthy] = StatusCodes.Status200OK,
-                    [HealthStatus.Degraded] = StatusCodes.Status200OK,
-                    [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
-                }
-            });
+            //    ResultStatusCodes =
+            //    {
+            //        [HealthStatus.Healthy] = StatusCodes.Status200OK,
+            //        [HealthStatus.Degraded] = StatusCodes.Status200OK,
+            //        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
+            //    }
+            //});
 
             app.UseAuthentication();
 
-            app.UseMvc();
+            //app.UseMvc();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
 
-        private static Task WriteResponse(HttpContext httpContext, HealthReport result)
-        {
-            httpContext.Response.ContentType = "application/json";
+        //private static Task WriteResponse(HttpContext httpContext, HealthReport result)
+        //{
+        //    httpContext.Response.ContentType = "application/json";
 
-            var json = new JObject(
-                new JProperty("status", result.Status.ToString()),
-                new JProperty("results", new JObject(result.Entries.Select(pair =>
-                    new JProperty(pair.Key, new JObject(
-                        new JProperty("status", pair.Value.Status.ToString()),
-                        new JProperty("description", pair.Value.Description),
-                        new JProperty("data", new JObject(pair.Value.Data.Select(p => new JProperty(p.Key, p.Value))))))))));
-            return httpContext.Response.WriteAsync(json.ToString(Formatting.Indented));
-        }
+        //    var json = new JObject(
+        //        new JProperty("status", result.Status.ToString()),
+        //        new JProperty("results", new JObject(result.Entries.Select(pair =>
+        //            new JProperty(pair.Key, new JObject(
+        //                new JProperty("status", pair.Value.Status.ToString()),
+        //                new JProperty("description", pair.Value.Description),
+        //                new JProperty("data", new JObject(pair.Value.Data.Select(p => new JProperty(p.Key, p.Value))))))))));
+        //    return httpContext.Response.WriteAsync(json.ToString(Formatting.Indented));
+        //}
 
         private Dictionary<string, HashSet<string>> GetImmutableCollections()
         {
@@ -311,39 +318,39 @@ namespace Foundation.ObjectService.WebUI
             services.AddSwaggerGen(c =>
             {
                 #region Swagger generation
-                c.SwaggerDoc("v1", new Info
-                    {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
                         Title = "Object Microservice API",
                         Version = "v1",
                         Description = "A microservice for providing an abstraction layer to a database engine, where HTTP actions are mapped to CRUD operations. Clients of the object service and the underlying database technology may thus change independent of one another provided the API remains consistent.",
-                        Contact = new Contact
+                        Contact = new OpenApiContact
                         {
                             Name = "Erik Knudsen",
                             Email = string.Empty,
-                            Url = "https://github.com/erik1066"
+                            Url = new Uri("https://github.com/erik1066")
                         },
-                        License = new License
+                        License = new OpenApiLicense
                         {
                             Name = "Apache 2.0",
-                            Url = "https://www.apache.org/licenses/LICENSE-2.0"
+                            Url = new Uri("https://www.apache.org/licenses/LICENSE-2.0")
                         }
                     }
                 );
 
-                if (tokenType != TokenType.None)
-                {
-                    c.AddSecurityDefinition("Bearer", new ApiKeyScheme 
-                    { 
-                        In = "header", 
-                        Description = "Please enter Token into field", 
-                        Name = "Authorization", 
-                        Type = "apiKey" 
-                    });
+                //if (tokenType != TokenType.None)
+                //{
+                //    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme 
+                //    { 
+                //        In = "header", 
+                //        Description = "Please enter Token into field", 
+                //        Name = "Authorization", 
+                //        Type = "apiKey" 
+                //    });
 
-                    c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>> {
-                        { "Bearer", Enumerable.Empty<string>() },
-                    });
-                }
+                //    c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>> {
+                //        { "Bearer", Enumerable.Empty<string>() },
+                //    });
+                //}
 
                 // These two lines are necessary for Swagger to pick up the C# XML comments and show them in the Swagger UI. See https://github.com/domaindrivendev/Swashbuckle.AspNetCore for more details.
                 var filePath = System.IO.Path.Combine(System.AppContext.BaseDirectory, "api.xml");
