@@ -64,8 +64,9 @@ run-integration-tests:
 run-performance-tests:
 	docker-compose --file tests/performance/docker-compose.yml up --detach
 	printf 'Wait for Object service\n'
-	until `curl --output /dev/null --silent --fail --connect-timeout 80 http://localhost:9090/health/ready`; do printf '.'; sleep 1; done
-	sleep 1
+	sleep 5
+	# until `curl --output /dev/null --silent --fail --connect-timeout 80 http://localhost:9090/health/ready`; do printf '.'; sleep 1; done
+	# sleep 1
 	printf '\n'
 	ab -p tests/performance/resources/001.json -T application/json -c 2 -n 1000 http://localhost:9090/api/1.0/bookstore/books
 	printf '\n'
